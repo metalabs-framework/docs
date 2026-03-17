@@ -1,0 +1,54 @@
+# Notify & Progress
+
+## Notifications
+
+```lua
+QBCore.Functions.Notify('You received $500', 'success', 5000)
+```
+
+When `BridgeConfig.UseOxLib` is enabled (default), this maps to:
+
+```lua
+lib.notify({
+    description = 'You received $500',
+    type        = 'success',
+    duration    = 5000,
+})
+```
+
+### Type Mapping
+
+| QB Type | ox_lib Type |
+|---------|-------------|
+| `success` | `success` |
+| `error` | `error` |
+| `primary` | `info` |
+| `police` | `info` |
+| `inform` | `info` |
+| `warning` | `warning` |
+
+### Fallback
+
+Without ox_lib, notifications fall back to native GTA text notifications.
+
+## Progress Bars
+
+```lua
+QBCore.Functions.Progressbar('doing_something', 'Working...', 5000, false, true, {
+    disableMovement = true,
+    disableCombat = true,
+}, {
+    animDict = 'anim@amb@nightclub@mini@drinking@drinking_shots@ped_a@normal',
+    anim = 'pour_one',
+}, nil, nil, function()
+    print('Finished!')
+end, function()
+    print('Cancelled!')
+end)
+```
+
+When `BridgeConfig.UseOxLib` is enabled, this translates to `lib.progressBar` with the appropriate parameter mapping.
+
+### Fallback
+
+Without ox_lib, the bridge uses a simple `Wait(duration)` and calls `onFinish`.

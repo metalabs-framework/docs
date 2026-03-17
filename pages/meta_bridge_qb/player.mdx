@@ -1,0 +1,98 @@
+# Player API
+
+## Client Side
+
+### GetPlayerData
+
+Returns a QBCore-shaped PlayerData table, built from the meta_logic cache.
+
+```lua
+local QBCore = exports['qb-core']:GetCoreObject()
+local PlayerData = QBCore.Functions.GetPlayerData()
+```
+
+**Returned shape:**
+
+```lua
+{
+    citizenid = 'license:abc123',
+    license   = 'license:abc123',
+    name      = 'John',
+    source    = 1,
+    cid       = 1,
+    charinfo  = { firstname, lastname, birthdate, gender, nationality },
+    money     = { cash, bank, crypto },
+    job       = { name, label, grade, onduty, isboss, payment },
+    gang      = { name, label, grade, isboss },
+    metadata  = { ... },   -- mapped from meta_core state bag
+    items     = {},         -- always empty (inventory is external)
+}
+```
+
+### QBCore.PlayerData
+
+The global `QBCore.PlayerData` table is automatically kept in sync with Meta events. Scripts that read it directly will get up-to-date data.
+
+### Client Events
+
+The bridge fires these events when the corresponding Meta events occur:
+
+| QB Event | Trigger |
+|----------|---------|
+| `QBCore:Client:OnPlayerLoaded` | Player loads in |
+| `QBCore:Client:OnPlayerUnload` | Player unloads |
+| `QBCore:Client:OnJobUpdate` | Job changes |
+| `QBCore:Client:OnGangUpdate` | Gang changes |
+
+## Server Side
+
+### GetPlayer
+
+Returns a QB-compatible Player object with `.PlayerData` and `.Functions`.
+
+```lua
+local QBCore = exports['qb-core']:GetCoreObject()
+local Player = QBCore.Functions.GetPlayer(source)
+
+print(Player.PlayerData.charinfo.firstname)
+print(Player.Functions.GetMoney('cash'))
+```
+
+### Player.Functions
+
+| Method | Behavior |
+|--------|----------|
+| `GetMoney(type)` | Reads from character (cash/bank/crypto) |
+| `AddMoney(type, amount)` | **Stub** — logs warning, returns false |
+| `RemoveMoney(type, amount)` | **Stub** — logs warning, returns false |
+| `SetMoney(type, amount)` | **Stub** — logs warning, returns false |
+| `GetJob()` | Returns current job table |
+| `SetJob(name, grade)` | Calls `exports.meta_core:UpdateJob` |
+| `GetGang()` | Returns current gang table |
+| `SetGang(name, grade)` | Calls `exports.meta_core:UpdateGang` |
+| `GetMeta(key)` | Calls `exports.meta_core:GetState` |
+| `SetMeta(key, value)` | Calls `exports.meta_core:SetState` |
+| `Save()` | Calls `exports.meta_core:SaveCharacter` |
+| `GetName()` | Returns firstname + lastname |
+
+### GetPlayers / GetQBPlayers
+
+```lua
+local sources = QBCore.Functions.GetPlayers()       -- array of source IDs
+local players = QBCore.Functions.GetQBPlayers()     -- { [source] = Player }
+```
+
+### GetPlayerByCitizenId
+
+```lua
+local Player = QBCore.Functions.GetPlayerByCitizenId('license:abc123')
+```
+
+### Server Events
+
+| QB Event | Trigger |
+|----------|---------|
+| `QBCore:Server:OnPlayerLoaded` | Player loads (receives Player object) |
+| `QBCore:Server:OnPlayerUnload` | Player drops (receives source) |
+| `QBCore:Server:OnJobUpdate` | Job changes (receives source, jobData) |
+| `QBCore:Server:OnGangUpdate` | Gang changes (receives source, gangData) |

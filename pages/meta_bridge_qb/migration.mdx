@@ -1,0 +1,66 @@
+# Migration Guide
+
+## Step 1: Install the Bridge
+
+Ensure meta_core, meta_logic, and meta_bridge_qb are running. Most QB scripts will work immediately.
+
+## Step 2: Identify Incompatibilities
+
+The bridge stubs these operations — they will log warnings:
+
+- **Money mutations** (`AddMoney`, `RemoveMoney`, `SetMoney`) — these need to route to your economy resource
+- **Inventory operations** (`AddItem`, `RemoveItem`, `HasItem`) — these need your inventory resource exports
+- **Shared data management** (`AddJob`, `AddItem`, etc.) — these belong in dedicated resources
+
+## Step 3: Replace Stubs Gradually
+
+For each stubbed function your scripts use:
+
+```lua
+-- Before (QB pattern, stubbed):
+Player.Functions.AddMoney('cash', 500, 'job-payment')
+
+-- After (Meta-native):
+exports.meta_eco:AddMoney(source, 'cash', 500, 'job-payment')
+```
+
+## Step 4: Migrate to Meta-Native APIs
+
+As you gain confidence, replace QB patterns with Meta-native ones:
+
+```lua
+-- Before (QB through bridge):
+local QBCore = exports['qb-core']:GetCoreObject()
+local PlayerData = QBCore.Functions.GetPlayerData()
+local job = PlayerData.job.name
+
+-- After (Meta-native):
+local job = exports.meta_logic:GetJob()
+local jobName = job and job.name
+```
+
+```lua
+-- Before (QB callback through bridge):
+QBCore.Functions.TriggerCallback('myresource:check', function(result)
+    print(result)
+end, someData)
+
+-- After (Meta-native):
+local result = exports.meta_logic:ServerRequestAsync('myresource:check', { data = someData })
+```
+
+## Step 5: Remove the Bridge
+
+Once all your resources use Meta-native APIs, remove `meta_bridge_qb` from your server.cfg. Your Meta-native resources should have no dependency on it.
+
+## Common Patterns
+
+| QB Pattern | Meta-Native Equivalent |
+|-----------|----------------------|
+| `QBCore.Functions.GetPlayerData()` | `exports.meta_logic:GetPlayerData()` |
+| `QBCore.Functions.GetPlayer(source)` | `exports.meta_core:GetSession(source)` + `GetActiveCharacter(source)` |
+| `QBCore.Functions.TriggerCallback(name, cb, ...)` | `exports.meta_logic:ServerRequest(name, payload, cb)` |
+| `QBCore.Functions.CreateCallback(name, handler)` | `exports.meta_logic:RegisterRoute(name, handler)` |
+| `QBCore.Functions.Notify(text, type)` | `lib.notify({description = text, type = type})` |
+| `Player.Functions.SetJob(name, grade)` | `exports.meta_core:UpdateJob(source, {name, grade})` |
+| `Player.Functions.GetMeta(key)` | `exports.meta_core:GetState(source, key)` |

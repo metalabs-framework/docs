@@ -1,0 +1,9 @@
+{
+  "index": "Overview",
+  "installation": "Installation",
+  "player": "Player API",
+  "callbacks": "Callbacks",
+  "notify-progress": "Notify & Progress",
+  "migration": "Migration Guide",
+  "security": "Security Notes"
+}

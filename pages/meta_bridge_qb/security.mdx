@@ -1,0 +1,46 @@
+# Security Notes
+
+## Design Principles
+
+meta_bridge_qb bridges the **API shape**, not the **trust model**. Legacy QB scripts may have patterns that assume client authority — the bridge does not replicate those assumptions.
+
+## What the Bridge Does NOT Do
+
+### No Client Trust
+
+All client bridge files are treated as public. Nothing sensitive is stored client-side. Client requests always go through ml.Network, which validates the source server-side.
+
+### No Direct Money Manipulation
+
+`AddMoney`, `RemoveMoney`, and `SetMoney` are stubs. In QB-core, these functions directly modify the player object on the server. In Meta Framework, economy authority belongs to a dedicated resource (meta_eco). The bridge refuses to grant money directly.
+
+### No Inventory Authority
+
+`AddItem`, `RemoveItem`, and `HasItem` are stubs. Inventory is an external concern managed by a dedicated inventory resource.
+
+### No Generic Net Events
+
+The bridge does **not** register any `RegisterNetEvent` handlers. All client-server communication uses ml.Network's route system, which validates the source on every request.
+
+### No Permission Escalation
+
+The bridge cannot grant permissions, roles, or admin levels. It can only read permission state from meta_core.
+
+## Intentionally Not Mirrored
+
+These QB patterns are **not** replicated because they are inherently insecure:
+
+| QB Pattern | Why It's Skipped |
+|-----------|-----------------|
+| Client-triggered money changes | Economy must be server-authoritative |
+| Client-triggered inventory changes | Inventory must be server-authoritative |
+| `TriggerServerEvent` for trusted operations | Use exports or ml.Network routes instead |
+| Global shared data mutation from any resource | Data management should be centralized |
+
+## Resource Isolation
+
+The `provide 'qb-core'` directive prevents the real qb-core from loading alongside this bridge. There is no risk of two cores conflicting.
+
+## Callback Security
+
+QB callbacks registered via `CreateCallback` are internally ml.Network routes prefixed with `qb:`. They inherit ml.Network's source validation. The handler always receives the validated `source` as the first argument.

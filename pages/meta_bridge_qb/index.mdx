@@ -1,0 +1,39 @@
+# meta_bridge_qb
+
+QBCore compatibility bridge for Meta Framework. Allows QB/QBCore-style resources to work with Meta Framework with minimal rewrites.
+
+## What It Is
+
+A **migration and compatibility layer** that exposes familiar QB-style functions, callbacks, events, and helpers while routing all operations through Meta Framework resources.
+
+## What It Is Not
+
+- Not a second framework core
+- Not an authority for money, inventory, or permissions
+- Not a permanent dependency — it exists to help you migrate
+
+## Architecture
+
+```
+[QB-style script]
+    ↓ exports['qb-core']:GetCoreObject()
+[meta_bridge_qb]
+    ↓ exports.meta_core / exports.meta_logic
+[Meta Framework]
+```
+
+## Compatibility Surface
+
+| Feature | Status |
+|---------|--------|
+| `GetCoreObject()` | Fully bridged |
+| `GetPlayerData()` (client) | Fully bridged |
+| `GetPlayer(source)` (server) | Fully bridged |
+| `TriggerCallback` / `CreateCallback` | Bridged via ml.Network |
+| `Notify()` | Bridged via ox_lib |
+| `Progressbar()` | Bridged via ox_lib |
+| QB lifecycle events | Fully bridged |
+| `GetMoney()` / `GetJob()` / `GetGang()` | Bridged (read + write) |
+| `GetMeta()` / `SetMeta()` | Bridged via meta_core state |
+| `AddMoney` / `RemoveMoney` | Stubbed (meta_eco not yet built) |
+| `AddItem` / `RemoveItem` | Stubbed (external concern) |

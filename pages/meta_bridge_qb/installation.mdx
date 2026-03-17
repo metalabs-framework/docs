@@ -1,0 +1,33 @@
+# Installation
+
+## Requirements
+
+- [meta_core](https://github.com/metalabs-framework/meta_core)
+- [meta_logic](https://github.com/metalabs-framework/meta_logic)
+- [ox_lib](https://github.com/overextended/ox_lib) (optional, for notify/progress)
+
+## Setup
+
+Add to your `server.cfg` after meta_core and meta_logic:
+
+```cfg
+ensure meta_core
+ensure meta_logic
+ensure meta_bridge_qb
+```
+
+The `provide 'qb-core'` directive in the manifest means any resource with a dependency on `qb-core` will automatically resolve to this bridge. You do **not** need to rename the folder.
+
+## Configuration
+
+Edit `shared/config.lua`:
+
+```lua
+BridgeConfig = {
+    Debug = false,
+    UseOxLib = true,              -- use ox_lib for notify/progress
+    CallbackPrefix = 'qb:',      -- prefix for callback routes
+    MoneyStubBehavior = 'warn',   -- 'warn', 'error', or 'silent'
+    InventoryStubBehavior = 'warn',
+}
+```
