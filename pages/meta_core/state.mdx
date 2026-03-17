@@ -1,0 +1,49 @@
+# State
+
+The state module provides per-player key/value storage that persists to MySQL. State is saved as a JSON blob in the `meta_player_state` table.
+
+## How It Works
+
+- State is loaded from the database when a session is created
+- Changes are tracked with a dirty flag
+- A background thread persists dirty state every `StateSaveInterval` seconds (default 300)
+- State is also persisted when a session is destroyed or the resource stops
+- State changes fire the `stateChanged` event
+
+## Exports
+
+### GetState
+
+Get a single state value by key.
+
+```lua
+local isDead = exports.meta_core:GetState(source, 'isDead')
+```
+
+### SetState
+
+Set a state value. Fires the `stateChanged` event with old and new values.
+
+```lua
+exports.meta_core:SetState(source, 'isDead', true)
+exports.meta_core:SetState(source, 'money', 5000)
+```
+
+### GetStateBag
+
+Get the entire state bag (all key/value pairs) for a player.
+
+```lua
+local state = exports.meta_core:GetStateBag(source)
+-- state = { isDead = false, money = 5000, ... }
+```
+
+## Storage
+
+State is stored in the `meta_player_state` table:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `identifier` | VARCHAR(60) | Player's unique identifier (primary key) |
+| `state_data` | LONGTEXT | JSON-encoded state bag |
+| `updated_at` | TIMESTAMP | Last persistence time |

@@ -1,0 +1,29 @@
+# meta_core
+
+Server-authoritative framework core for MetaLabs Framework.
+
+## What is meta_core?
+
+meta_core is a **server-only** resource (`server_only 'yes'`) that owns all authoritative state. It is the single source of truth for player data in your server.
+
+No client-side code exists in meta_core. All interactions happen through server exports and events.
+
+## Modules
+
+| Module | Responsibility |
+|--------|---------------|
+| **Player** | Session lifecycle — creation, destruction, registry lookup |
+| **Identity** | Active character management — job and gang assignments |
+| **Permissions** | ACE-based admin levels with role, job, and gang checks |
+| **State** | Per-player key/value state bag with dirty tracking and MySQL persistence |
+| **Validation** | Source verification and schema-based payload validation |
+
+## Architecture
+
+meta_core exposes **22 server exports** that other resources call to interact with player data. It fires events when state changes, which downstream resources (like meta_logic) can listen to and relay to clients.
+
+```
+[Your Resource] ──exports──> [meta_core] ──events──> [meta_logic server] ──push──> [client]
+```
+
+meta_core never talks to clients directly. That's meta_logic's job.

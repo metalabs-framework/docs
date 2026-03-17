@@ -1,0 +1,27 @@
+# Installation
+
+## Requirements
+
+- FiveM server with **OneSync** enabled
+- [meta_core](https://github.com/metalabs-framework/meta_core)
+
+## Server Config
+
+Add to your `server.cfg` **after** meta_core:
+
+```cfg
+ensure meta_core
+ensure meta_logic
+```
+
+## Configuration
+
+The `ML.Config` table in `shared/config.lua` controls runtime behavior:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `Debug` | `false` | Enable debug logging |
+| `TrackingInterval` | `200` | Milliseconds between player tracking updates |
+| `NearbyVehicleRadius` | `50.0` | Radius for nearby vehicle scanning |
+| `NearbyVehicleInterval` | `1000` | Milliseconds between nearby vehicle scans |
+| `CacheRequestTimeout` | `10000` | Milliseconds before a network request times out |

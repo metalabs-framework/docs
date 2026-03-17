@@ -1,0 +1,54 @@
+# State
+
+The state module handles two concerns: **client-only local state** and **server-to-client state sync**.
+
+## Client Local State
+
+Local state is client-only runtime data that doesn't persist. It's used by the tracking module and can be used by other resources for temporary state.
+
+```lua
+ML.State.SetLocal('myKey', 'myValue')
+local value = ML.State.GetLocal('myKey')
+local all = ML.State.GetAllLocal()
+```
+
+Changes fire the `meta_logic:client:localStateChanged` event:
+
+```lua
+AddEventHandler('meta_logic:client:localStateChanged', function(key, value, old)
+    if key == ML.StateKeys.IS_DEAD then
+        print('Death state changed:', value)
+    end
+end)
+```
+
+### Built-in State Keys
+
+The `ML.StateKeys` table provides constants for commonly used state keys:
+
+| Key | Constant |
+|-----|----------|
+| `isDead` | `ML.StateKeys.IS_DEAD` |
+| `isHandcuffed` | `ML.StateKeys.IS_HANDCUFFED` |
+| `isDowned` | `ML.StateKeys.IS_DOWNED` |
+| `isInvincible` | `ML.StateKeys.IS_INVINCIBLE` |
+| `isInvisible` | `ML.StateKeys.IS_INVISIBLE` |
+| `dutyStatus` | `ML.StateKeys.DUTY_STATUS` |
+
+## Server-to-Client Sync
+
+When meta_core fires a `stateChanged` event on the server, meta_logic relays it to the affected client. The client cache is updated automatically and the `meta_logic:client:stateChanged` event is fired.
+
+```lua
+-- Server side (any resource)
+exports.meta_core:SetState(source, 'isHandcuffed', true)
+
+-- Client side (automatic)
+AddEventHandler('meta_logic:client:stateChanged', function(key, value, old)
+    if key == 'isHandcuffed' then
+        -- React to state change
+    end
+end)
+```
+
+The client never needs to poll for state changes. Everything is push-based.

@@ -1,0 +1,109 @@
+# Player
+
+The player module handles the client-side cache of player data and continuous tracking of runtime state.
+
+## Client Cache
+
+When a player loads in, meta_logic server pushes a full sync of their data to the client:
+
+- Session info (source, license, name)
+- Character data (name, dob, sex)
+- Job and gang
+- Permissions
+- State bag
+
+After the initial sync, changes are pushed as **patches** — only the changed field is sent.
+
+### Accessing Cached Data
+
+```lua
+local data = exports.meta_logic:GetPlayerData()
+-- { session = {...}, character = {...}, job = {...}, gang = {...}, permissions = {...}, state = {...} }
+
+local character = exports.meta_logic:GetCharacter()
+-- { firstname = 'John', lastname = 'Doe', fullname = 'John Doe', ... }
+
+local job = exports.meta_logic:GetJob()
+-- { name = 'police', label = 'Police', grade = 3, ... }
+
+local gang = exports.meta_logic:GetGang()
+-- { name = 'none', label = 'None', grade = 0 }
+
+local loaded = exports.meta_logic:IsPlayerLoaded()
+-- true/false
+```
+
+All cached data is **read-only** on the client. Changes must go through meta_core on the server.
+
+## Player Tracking
+
+A client-side thread runs every `ML.Config.TrackingInterval` ms (default 200) and updates:
+
+| Key | Description |
+|-----|-------------|
+| `ped` | Current player ped handle |
+| `coords` | Current position (vector3) |
+| `heading` | Current heading |
+| `isInVehicle` | Whether player is in a vehicle |
+| `currentVehicle` | Vehicle entity handle (or nil) |
+| `vehicleSeat` | Seat index (or nil) |
+| `currentWeapon` | Weapon hash (or nil) |
+| `isArmed` | Whether player has a weapon out |
+| `isDead` | Whether player ped is dead |
+
+### Accessing Tracked Data
+
+```lua
+local coords = exports.meta_logic:GetCoords()
+local inVehicle = exports.meta_logic:IsInVehicle()
+local vehicle = exports.meta_logic:GetCurrentVehicle()
+```
+
+Or through `ML.Player` directly:
+
+```lua
+ML.Player.GetPed()
+ML.Player.GetCoords()
+ML.Player.GetHeading()
+ML.Player.IsInVehicle()
+ML.Player.GetCurrentVehicle()
+ML.Player.GetVehicleSeat()
+ML.Player.GetCurrentWeapon()
+ML.Player.IsArmed()
+ML.Player.IsDead()
+ML.Player.IsHandcuffed()
+ML.Player.IsDowned()
+```
+
+## Client Events
+
+| Event | Fired When |
+|-------|------------|
+| `meta_logic:client:playerLoaded` | Full cache sync received |
+| `meta_logic:client:playerUnloaded` | Player session destroyed |
+| `meta_logic:client:jobUpdated` | Job changed |
+| `meta_logic:client:gangUpdated` | Gang changed |
+| `meta_logic:client:stateChanged` | Server state value changed |
+
+## Server Bridge
+
+On the server side, `ML.Player` provides pass-through functions to meta_core:
+
+```lua
+ML.Player.GetSession(source)
+ML.Player.GetActiveCharacter(source)
+ML.Player.HasPermission(source, node)
+ML.Player.HasRole(source, role)
+ML.Player.HasJob(source, name, minGrade)
+ML.Player.HasGang(source, name, minGrade)
+ML.Player.IsAdmin(source)
+ML.Player.UpdateJob(source, jobData)
+ML.Player.UpdateGang(source, gangData)
+ML.Player.GetState(source, key)
+ML.Player.SetState(source, key, value)
+ML.Player.GetStateBag(source)
+```
+
+## Resource Restart Handling
+
+When meta_logic restarts, it automatically re-syncs all connected players who already have an active character in meta_core.

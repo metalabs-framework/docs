@@ -1,0 +1,40 @@
+# Installation
+
+## Requirements
+
+- FiveM server with **OneSync** enabled
+- [oxmysql](https://github.com/overextended/oxmysql)
+
+## Database Setup
+
+Run the following SQL against your database:
+
+```sql
+CREATE TABLE IF NOT EXISTS `meta_player_state` (
+    `identifier` VARCHAR(60) NOT NULL,
+    `state_data` LONGTEXT NOT NULL DEFAULT '{}',
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`identifier`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+## Server Config
+
+Add to your `server.cfg`:
+
+```cfg
+ensure oxmysql
+ensure meta_core
+```
+
+meta_core must start **after** oxmysql.
+
+## Configuration
+
+The `Meta.Config` table in `server/init.lua` controls runtime behavior:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `Debug` | `false` | Enable debug-level logging |
+| `LogLevel` | `'info'` | Minimum log level (`debug`, `info`, `warn`, `error`) |
+| `StateSaveInterval` | `300` | Seconds between automatic state persistence cycles |

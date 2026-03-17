@@ -1,0 +1,113 @@
+# Events
+
+meta_core fires server-side events throughout the player lifecycle. All events are non-networked (`AddEventHandler`, not `RegisterNetEvent`).
+
+## Core Ready
+
+Fired once when meta_core has finished initializing.
+
+```lua
+AddEventHandler('meta_core:server:ready', function()
+    print('meta_core is ready')
+end)
+```
+
+## Player Lifecycle
+
+### onPlayerLoaded
+
+Fired when a player's character is set for the first time via `SetActiveCharacter`. This is the canonical "player fully loaded" event.
+
+```lua
+AddEventHandler('meta_core:server:onPlayerLoaded', function(source, session, character)
+    print(character.fullname, 'has loaded')
+end)
+```
+
+### onPlayerUnload
+
+Fired when a loaded player's session is being destroyed (before cleanup).
+
+```lua
+AddEventHandler('meta_core:server:onPlayerUnload', function(source)
+    print('Player', source, 'is unloading')
+end)
+```
+
+## Session Lifecycle
+
+### sessionCreated
+
+Fired immediately after a new session is created.
+
+```lua
+AddEventHandler('meta_core:server:sessionCreated', function(source, session)
+    print(session.name, 'connected')
+end)
+```
+
+### sessionDestroying
+
+Fired before a session is removed. State is still accessible at this point.
+
+```lua
+AddEventHandler('meta_core:server:sessionDestroying', function(source)
+    -- Last chance to read session data
+end)
+```
+
+### sessionDestroyed
+
+Fired after a session has been fully removed.
+
+```lua
+AddEventHandler('meta_core:server:sessionDestroyed', function(source)
+    print('Session for', source, 'destroyed')
+end)
+```
+
+## Identity Events
+
+### jobUpdated
+
+Fired when a player's job is changed via `UpdateJob`.
+
+```lua
+AddEventHandler('meta_core:server:jobUpdated', function(source, job)
+    print('Job changed to', job.name, 'grade', job.grade)
+end)
+```
+
+### gangUpdated
+
+Fired when a player's gang is changed via `UpdateGang`.
+
+```lua
+AddEventHandler('meta_core:server:gangUpdated', function(source, gang)
+    print('Gang changed to', gang.name)
+end)
+```
+
+## State Events
+
+### stateChanged
+
+Fired when a single state value is changed via `SetState`.
+
+```lua
+AddEventHandler('meta_core:server:stateChanged', function(source, key, value, oldValue)
+    print(key, 'changed from', oldValue, 'to', value)
+end)
+```
+
+### stateBatchChanged
+
+Fired when multiple state values are changed via `SetMany`.
+
+```lua
+AddEventHandler('meta_core:server:stateBatchChanged', function(source, changes)
+    for key, entry in pairs(changes) do
+        print(key, entry.old, '->', entry.new)
+    end
+end)
+```

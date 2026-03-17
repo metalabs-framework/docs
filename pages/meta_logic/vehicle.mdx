@@ -1,0 +1,51 @@
+# Vehicle
+
+The vehicle module provides client-side vehicle data helpers and server-validated vehicle interactions.
+
+## Client Helpers
+
+### Current Vehicle Data
+
+```lua
+ML.Vehicle.GetSpeed()        -- raw speed value
+ML.Vehicle.GetSpeedMph()     -- speed in MPH
+ML.Vehicle.GetSpeedKmh()     -- speed in KM/H
+ML.Vehicle.GetFuelLevel()    -- fuel level (0-100)
+ML.Vehicle.IsEngineRunning() -- boolean
+```
+
+### Nearby Vehicle Cache
+
+A background thread scans for nearby vehicles within `ML.Config.NearbyVehicleRadius` (default 50.0) every `ML.Config.NearbyVehicleInterval` ms (default 1000).
+
+```lua
+local vehicles = ML.Vehicle.GetCurrentVehicleData()
+```
+
+## Interactions
+
+### Toggle Lock
+
+Server-validated vehicle lock toggle. The server checks distance before allowing the action.
+
+```lua
+ML.Vehicle.ToggleLock(netId)
+```
+
+This sends a `vehicle:toggleLock` network request. The server validates:
+- The vehicle entity exists
+- The player is within 10 units of the vehicle
+
+Returns `{ locked = true/false }` on success.
+
+### Toggle Engine
+
+Client-side engine toggle (no server validation needed).
+
+```lua
+ML.Vehicle.ToggleEngine()
+```
+
+## Server Side
+
+The vehicle server module is minimal — it handles the `vehicle:toggleLock` route with distance validation. Additional server-side vehicle logic can be added via custom routes.

@@ -1,0 +1,39 @@
+# meta_logic
+
+Client/server bridge resource for MetaLabs Framework.
+
+## What is meta_logic?
+
+meta_logic sits between **meta_core** (server authority) and the client. It does **not** own truth — meta_core does. meta_logic handles:
+
+- Client-side caching of player data
+- Network request/response transport
+- Real-time tracking of player position, vehicle, and weapon
+- Vehicle utilities and interactions
+- Interaction abstractions (target, context menu, radial)
+- Client-only local state management
+
+## Architecture
+
+```
+[Client Cache] <── push ── [meta_logic server] <── events ── [meta_core]
+     |                            |
+     |── ServerRequest ──>        |── exports.meta_core:*
+     |<── response ──────         |
+```
+
+The client **never polls**. meta_logic server listens to meta_core lifecycle events and pushes updates to the correct client in real time.
+
+## Modules
+
+| Module | Responsibility |
+|--------|---------------|
+| **Network** | Single request/response channel with route-based dispatch |
+| **Player** | Client cache, tracking, server bridge |
+| **Vehicle** | Vehicle data, nearby scan, interactions |
+| **Interaction** | ox_target, context menu, and radial abstractions |
+| **State** | Client-only local state and server-to-client sync |
+
+## Namespace
+
+All meta_logic code lives under the `ML` global namespace.

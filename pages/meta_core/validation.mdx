@@ -1,0 +1,56 @@
+# Validation
+
+The validation module provides source verification and schema-based payload validation for secure server-side data handling.
+
+## Source Validation
+
+### ValidateSource
+
+Checks that a source is a valid, connected player with a license identifier.
+
+```lua
+local valid = exports.meta_core:ValidateSource(source)
+```
+
+Validates:
+- Source is a valid number
+- `GetPlayerName` returns a value
+- Player has a `license:` identifier
+
+## Payload Validation
+
+### ValidatePayload
+
+Validates a data table against a schema. Returns sanitized data on success or field-level errors on failure.
+
+```lua
+local schema = {
+    firstname = { type = 'string', required = true, minLength = 2, maxLength = 50 },
+    age = { type = 'number', required = true, min = 0, max = 120, integer = true },
+    alive = { type = 'boolean' },
+    position = { type = 'vector3' },
+}
+
+local valid, result = exports.meta_core:ValidatePayload(data, schema)
+if valid then
+    -- result contains sanitized data
+    print(result.firstname, result.age)
+else
+    -- result contains field-level errors
+    for field, err in pairs(result) do
+        print(field, err)
+    end
+end
+```
+
+## Supported Types
+
+| Type | Options |
+|------|---------|
+| `string` | `required`, `minLength`, `maxLength`, `pattern` |
+| `number` | `required`, `min`, `max`, `integer` |
+| `boolean` | `required` |
+| `table` | `required` |
+| `vector3` | `required` — also accepts `{x, y, z}` tables and auto-converts |
+
+Strings are automatically sanitized: trimmed, null bytes removed, and truncated to `maxLength`.

@@ -1,0 +1,91 @@
+# Identity
+
+The identity module manages a player's active character, including their job and gang assignments.
+
+## Character Data
+
+A character table looks like:
+
+```lua
+{
+    firstname = 'John',
+    lastname = 'Doe',
+    fullname = 'John Doe',   -- auto-computed
+    dateofbirth = '1990-01-15',
+    sex = 'male',
+    job = {
+        name = 'police',
+        label = 'Police',
+        grade = 3,
+        gradeLabel = 'Sergeant',
+    },
+    gang = {
+        name = 'none',
+        label = 'None',
+        grade = 0,
+    },
+}
+```
+
+## Exports
+
+### GetActiveCharacter
+
+Returns the active character for a player, or `nil` if no character is loaded.
+
+```lua
+local character = exports.meta_core:GetActiveCharacter(source)
+if character then
+    print(character.fullname, character.job.name)
+end
+```
+
+### SetActiveCharacter
+
+Sets the active character for a player. Automatically computes `fullname` from `firstname` and `lastname`.
+
+On first call (when `session.loaded` is `false`), fires the `onPlayerLoaded` event.
+
+```lua
+exports.meta_core:SetActiveCharacter(source, {
+    firstname = 'John',
+    lastname = 'Doe',
+    dateofbirth = '1990-01-15',
+    sex = 'male',
+    job = { name = 'police', label = 'Police', grade = 3, gradeLabel = 'Sergeant' },
+    gang = { name = 'none', label = 'None', grade = 0 },
+})
+```
+
+### ClearActiveCharacter
+
+Removes the active character from the session.
+
+```lua
+exports.meta_core:ClearActiveCharacter(source)
+```
+
+### UpdateJob
+
+Updates the player's job. Fires the `jobUpdated` event.
+
+```lua
+exports.meta_core:UpdateJob(source, {
+    name = 'mechanic',
+    label = 'Mechanic',
+    grade = 1,
+    gradeLabel = 'Junior',
+})
+```
+
+### UpdateGang
+
+Updates the player's gang. Fires the `gangUpdated` event.
+
+```lua
+exports.meta_core:UpdateGang(source, {
+    name = 'ballas',
+    label = 'Ballas',
+    grade = 2,
+})
+```

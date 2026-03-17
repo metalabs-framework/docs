@@ -1,0 +1,84 @@
+# Sessions
+
+Sessions represent a connected player on the server. Each session is tied to a player's `source` and contains their license, identifier, character, permissions, metadata, and state.
+
+## Session Object
+
+When you call `GetSession`, you receive a serialized table:
+
+```lua
+{
+    source = 1,
+    license = 'license:abc123',
+    identifier = 'fivem:12345',
+    name = 'PlayerName',
+    character = nil,           -- or character table if loaded
+    permissions = {
+        roles = {},
+        adminLevel = 0,
+    },
+    metadata = {},
+    connectedAt = 1710000000,
+}
+```
+
+## Exports
+
+### CreateSession
+
+Creates a new session for a player. Called by the bridge layer when a player connects.
+
+```lua
+local session = exports.meta_core:CreateSession(source, {
+    license = 'license:abc123',
+    identifier = 'fivem:12345',
+    name = 'PlayerName',
+})
+```
+
+**Returns:** Serialized session table or `nil` if validation fails.
+
+### DestroySession
+
+Destroys a player's session. Persists state to database before removal.
+
+```lua
+exports.meta_core:DestroySession(source)
+```
+
+### GetSession
+
+Get a player's session by their source.
+
+```lua
+local session = exports.meta_core:GetSession(source)
+```
+
+**Returns:** Serialized session table or `nil`.
+
+### GetSessionByIdentifier
+
+Look up a session by identifier string.
+
+```lua
+local session = exports.meta_core:GetSessionByIdentifier('fivem:12345')
+```
+
+### GetAllSessions
+
+Returns all active sessions keyed by source.
+
+```lua
+local sessions = exports.meta_core:GetAllSessions()
+for src, session in pairs(sessions) do
+    print(session.name)
+end
+```
+
+### GetSessionCount
+
+Returns the number of active sessions.
+
+```lua
+local count = exports.meta_core:GetSessionCount()
+```

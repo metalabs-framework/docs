@@ -1,0 +1,27 @@
+# MetaLabs Framework
+
+A standalone, server-authoritative FiveM framework built from the ground up.
+
+## Resources
+
+| Resource | Description |
+|----------|-------------|
+| [meta_core](/meta_core) | Server-only authoritative core — player sessions, identity, permissions, validation, and persistent state |
+| [meta_logic](/meta_logic) | Client/server bridge — network transport, reactive cache, player tracking, vehicle utilities, and interaction layer |
+
+## Philosophy
+
+- **Server-authoritative** — the server owns all truth; clients receive push updates
+- **Framework-agnostic** — standalone core with a separate bridge layer for qb/qbx/esx compatibility
+- **Modular** — each concern is isolated into its own module with clean boundaries
+- **Minimal** — no bloat, no unnecessary abstractions, just what's needed
+
+## Tech Stack
+
+- Lua 5.4 on FiveM (cerulean)
+- OneSync
+- oxmysql
+
+## License
+
+All resources are licensed under [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.html).

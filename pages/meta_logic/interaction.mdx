@@ -1,0 +1,55 @@
+# Interaction
+
+The interaction module provides thin abstractions over popular interaction libraries. Currently wraps ox_target, ox_lib context menus, and ox_lib radial menus.
+
+## Target (ox_target)
+
+### Entity Target
+
+```lua
+ML.Interaction.AddEntityTarget(entity, options)
+ML.Interaction.RemoveEntityTarget(entity)
+```
+
+### Model Target
+
+```lua
+ML.Interaction.AddModelTarget(model, options)
+ML.Interaction.RemoveModelTarget(model)
+```
+
+### Zone Target
+
+```lua
+ML.Interaction.AddZoneTarget(name, data)
+ML.Interaction.RemoveZoneTarget(name)
+```
+
+## Context Menu (ox_lib)
+
+```lua
+ML.Interaction.OpenContext(data)
+ML.Interaction.CloseContext()
+```
+
+## Radial Menu (ox_lib)
+
+```lua
+ML.Interaction.AddRadialItem(data)
+ML.Interaction.RemoveRadialItem(id)
+ML.Interaction.ClearRadialItems()
+```
+
+## Server-Side Access Checks
+
+Two built-in network routes allow clients to verify permissions before showing interactions:
+
+```lua
+-- Check ACE permission
+local allowed, err = ML.Network.RequestAsync('interaction:checkAccess', { node = 'meta.admin' })
+
+-- Check job requirement
+local hasJob, err = ML.Network.RequestAsync('interaction:checkJob', { name = 'police', minGrade = 2 })
+```
+
+These are useful for conditionally showing interaction options based on server-validated permissions, without trusting the client cache.
