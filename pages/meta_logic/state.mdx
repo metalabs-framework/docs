@@ -7,16 +7,16 @@ The state module handles two concerns: **client-only local state** and **server-
 Local state is client-only runtime data that doesn't persist. It's used by the tracking module and can be used by other resources for temporary state.
 
 ```lua
-ML.State.SetLocal('myKey', 'myValue')
-local value = ML.State.GetLocal('myKey')
-local all = ML.State.GetAllLocal()
+ml.State.SetLocal('myKey', 'myValue')
+local value = ml.State.GetLocal('myKey')
+local all = ml.State.GetAllLocal()
 ```
 
 Changes fire the `meta_logic:client:localStateChanged` event:
 
 ```lua
 AddEventHandler('meta_logic:client:localStateChanged', function(key, value, old)
-    if key == ML.StateKeys.IS_DEAD then
+    if key == ml.StateKeys.IS_DEAD then
         print('Death state changed:', value)
     end
 end)
@@ -24,17 +24,17 @@ end)
 
 ### Built-in State Keys
 
-The `ML.StateKeys` table provides constants for commonly used state keys:
+The `ml.StateKeys` table provides constants for commonly used state keys:
 
 | Key | Constant |
 |-----|----------|
-| `isDead` | `ML.StateKeys.IS_DEAD` |
-| `isHandcuffed` | `ML.StateKeys.IS_HANDCUFFED` |
-| `isLastStand` | `ML.StateKeys.IS_LAST_STAND` |
-| `isDowned` | `ML.StateKeys.IS_DOWNED` |
-| `isInvincible` | `ML.StateKeys.IS_INVINCIBLE` |
-| `isInvisible` | `ML.StateKeys.IS_INVISIBLE` |
-| `dutyStatus` | `ML.StateKeys.DUTY_STATUS` |
+| `isDead` | `ml.StateKeys.IS_DEAD` |
+| `isHandcuffed` | `ml.StateKeys.IS_HANDCUFFED` |
+| `isLastStand` | `ml.StateKeys.IS_LAST_STAND` |
+| `isDowned` | `ml.StateKeys.IS_DOWNED` |
+| `isInvincible` | `ml.StateKeys.IS_INVINCIBLE` |
+| `isInvisible` | `ml.StateKeys.IS_INVISIBLE` |
+| `dutyStatus` | `ml.StateKeys.DUTY_STATUS` |
 
 ## Server-to-Client Sync
 

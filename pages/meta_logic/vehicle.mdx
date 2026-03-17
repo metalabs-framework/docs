@@ -7,19 +7,19 @@ The vehicle module provides client-side vehicle data helpers and server-validate
 ### Current Vehicle Data
 
 ```lua
-ML.Vehicle.GetSpeed()        -- raw speed value
-ML.Vehicle.GetSpeedMph()     -- speed in MPH
-ML.Vehicle.GetSpeedKmh()     -- speed in KM/H
-ML.Vehicle.GetFuelLevel()    -- fuel level (0-100)
-ML.Vehicle.IsEngineRunning() -- boolean
+ml.Vehicle.GetSpeed()        -- raw speed value
+ml.Vehicle.GetSpeedMph()     -- speed in MPH
+ml.Vehicle.GetSpeedKmh()     -- speed in KM/H
+ml.Vehicle.GetFuelLevel()    -- fuel level (0-100)
+ml.Vehicle.IsEngineRunning() -- boolean
 ```
 
 ### Nearby Vehicle Cache
 
-A background thread scans for nearby vehicles within `ML.Config.NearbyVehicleRadius` (default 50.0) every `ML.Config.NearbyVehicleInterval` ms (default 1000).
+A background thread scans for nearby vehicles within `ml.Config.NearbyVehicleRadius` (default 50.0) every `ml.Config.NearbyVehicleInterval` ms (default 1000).
 
 ```lua
-local vehicles = ML.Vehicle.GetCurrentVehicleData()
+local vehicles = ml.Vehicle.GetCurrentVehicleData()
 ```
 
 ## Interactions
@@ -29,7 +29,7 @@ local vehicles = ML.Vehicle.GetCurrentVehicleData()
 Server-validated vehicle lock toggle. The server checks distance before allowing the action.
 
 ```lua
-ML.Vehicle.ToggleLock(netId)
+ml.Vehicle.ToggleLock(netId)
 ```
 
 This sends a `vehicle:toggleLock` network request. The server validates:
@@ -43,7 +43,7 @@ Returns `{ locked = true/false }` on success.
 Client-side engine toggle (no server validation needed).
 
 ```lua
-ML.Vehicle.ToggleEngine()
+ml.Vehicle.ToggleEngine()
 ```
 
 ## Server Side
