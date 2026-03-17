@@ -1,0 +1,131 @@
+# Characters
+
+The characters module provides full character persistence with multicharacter support. Characters are stored in the `meta_characters` MySQL table and linked to a player's identifier.
+
+## Multicharacter
+
+Each player can have up to `Meta.Config.MaxCharacters` characters (default 5). Characters are assigned to numbered slots (1–5). When a character is deleted, its slot becomes available for reuse.
+
+## Character Object
+
+When loaded from the database, a character looks like:
+
+```lua
+{
+    id          = 1,               -- database auto-increment ID
+    slot        = 1,               -- slot number (1-5)
+    firstname   = 'John',
+    lastname    = 'Doe',
+    fullname    = 'John Doe',      -- auto-computed
+    dateofbirth = '1990-01-15',
+    sex         = 'male',
+    nationality = 'American',
+    backstory   = 'A former soldier...',
+    job         = { name = 'police', label = 'Police', grade = 3 },
+    gang        = { name = 'none', label = 'None', grade = 0 },
+    cash        = 5000,
+    bank        = 25000,
+    crypto      = 0,
+    lastPlayed  = '2026-03-17 12:00:00',
+    createdAt   = '2026-03-10 08:30:00',
+}
+```
+
+## Exports
+
+### CreateCharacter
+
+Creates a new character and inserts it into the database. Automatically assigns the next available slot.
+
+```lua
+local character, err = exports.meta_core:CreateCharacter(source, {
+    firstname   = 'John',
+    lastname    = 'Doe',
+    dateofbirth = '1990-01-15',
+    sex         = 'male',
+    nationality = 'American',
+    backstory   = 'A former soldier...',
+    job         = { name = 'unemployed', label = 'Unemployed', grade = 0 },
+    gang        = { name = 'none', label = 'None', grade = 0 },
+    cash        = 5000,
+    bank        = 25000,
+    crypto      = 0,
+})
+
+if not character then
+    print('Error:', err) -- 'no session', 'missing firstname or lastname', 'max characters reached (5)'
+end
+```
+
+**Returns:** Character table with `id` and `slot`, or `nil` + error string.
+
+### DeleteCharacter
+
+Deletes a character from the database. Validates that the player owns the character. If the character is currently active, it is cleared first.
+
+```lua
+local success, err = exports.meta_core:DeleteCharacter(source, charId)
+if not success then
+    print('Error:', err) -- 'character not found', 'not your character'
+end
+```
+
+### GetCharacters
+
+Returns all characters for a player, ordered by slot.
+
+```lua
+local characters, err = exports.meta_core:GetCharacters(source)
+if characters then
+    for _, char in ipairs(characters) do
+        print(char.slot, char.fullname, char.lastPlayed)
+    end
+end
+```
+
+### SelectCharacter
+
+Loads a character from the database and sets it as the active character. If another character is currently active, it is saved to the database first.
+
+Internally calls `SetActiveCharacter`, which handles the `onPlayerLoaded` event on first load.
+
+```lua
+local character, err = exports.meta_core:SelectCharacter(source, charId)
+if not character then
+    print('Error:', err) -- 'character not found or not yours'
+end
+```
+
+### SaveCharacter
+
+Persists the current active character's mutable fields (job, gang, cash, bank, crypto) back to the database. Called automatically when a session is destroyed.
+
+```lua
+exports.meta_core:SaveCharacter(source)
+```
+
+## Typical Flow
+
+```lua
+-- 1. Player connects, session created
+-- 2. Show character selection screen
+local characters = exports.meta_core:GetCharacters(source)
+
+-- 3a. Player creates a new character
+local newChar = exports.meta_core:CreateCharacter(source, { firstname = 'Jane', lastname = 'Smith', ... })
+
+-- 3b. Player selects an existing character
+local char = exports.meta_core:SelectCharacter(source, characters[1].id)
+
+-- 4. Player plays, job/gang/money changes happen in-memory
+
+-- 5. Player disconnects — SaveCharacter is called automatically
+```
+
+## Auto-Save
+
+Characters are automatically saved when:
+- A player disconnects (DestroySession calls SaveCharacter)
+- A player switches characters (SelectCharacter saves the previous one)
+
+You can also call `SaveCharacter` manually at any time for additional safety.

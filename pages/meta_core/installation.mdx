@@ -16,6 +16,28 @@ CREATE TABLE IF NOT EXISTS `meta_player_state` (
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`identifier`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `meta_characters` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `identifier` VARCHAR(60) NOT NULL,
+    `slot` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    `firstname` VARCHAR(50) NOT NULL,
+    `lastname` VARCHAR(50) NOT NULL,
+    `dateofbirth` VARCHAR(20) DEFAULT NULL,
+    `sex` VARCHAR(10) DEFAULT 'male',
+    `nationality` VARCHAR(50) DEFAULT NULL,
+    `backstory` TEXT DEFAULT NULL,
+    `job` LONGTEXT DEFAULT NULL,
+    `gang` LONGTEXT DEFAULT NULL,
+    `cash` BIGINT NOT NULL DEFAULT 0,
+    `bank` BIGINT NOT NULL DEFAULT 0,
+    `crypto` BIGINT NOT NULL DEFAULT 0,
+    `last_played` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `identifier_slot` (`identifier`, `slot`),
+    INDEX `idx_identifier` (`identifier`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 ## Server Config
@@ -38,3 +60,4 @@ The `Meta.Config` table in `server/init.lua` controls runtime behavior:
 | `Debug` | `false` | Enable debug-level logging |
 | `LogLevel` | `'info'` | Minimum log level (`debug`, `info`, `warn`, `error`) |
 | `StateSaveInterval` | `300` | Seconds between automatic state persistence cycles |
+| `MaxCharacters` | `5` | Maximum number of characters per player |

@@ -66,6 +66,38 @@ AddEventHandler('meta_core:server:sessionDestroyed', function(source)
 end)
 ```
 
+## Character Events
+
+### characterCreated
+
+Fired when a new character is created via `CreateCharacter`.
+
+```lua
+AddEventHandler('meta_core:server:characterCreated', function(source, character)
+    print(character.fullname, 'created in slot', character.slot)
+end)
+```
+
+### characterDeleted
+
+Fired when a character is deleted via `DeleteCharacter`.
+
+```lua
+AddEventHandler('meta_core:server:characterDeleted', function(source, charId)
+    print('Character', charId, 'deleted by', source)
+end)
+```
+
+### characterSelected
+
+Fired when a character is selected via `SelectCharacter`.
+
+```lua
+AddEventHandler('meta_core:server:characterSelected', function(source, character)
+    print(source, 'selected', character.fullname)
+end)
+```
+
 ## Identity Events
 
 ### jobUpdated
