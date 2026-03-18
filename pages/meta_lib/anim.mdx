@@ -1,0 +1,76 @@
+# Animations
+
+The anim module wraps animation loading and playback. Automatically loads the animation dictionary before playing.
+
+## Playing Animations
+
+#### Play
+
+Loads the dict and starts the animation. Returns immediately.
+
+```lua
+local ok = lib.anim.Play(PlayerPedId(), 'amb@world_human_aa_smoke@male@idle_a', 'idle_a')
+```
+
+#### Full Parameters
+
+```lua
+lib.anim.Play(
+    ped,          -- entity
+    dict,         -- animation dictionary
+    clip,         -- animation name
+    blendIn,      -- blend in speed (default 8.0)
+    blendOut,     -- blend out speed (default -8.0)
+    duration,     -- ms, -1 for infinite (default -1)
+    flags,        -- anim flags (default 0)
+    startPhase    -- 0.0-1.0 start position (default 0.0)
+)
+```
+
+Common animation flags:
+
+| Flag | Behavior |
+|------|----------|
+| 0 | Normal |
+| 1 | Loop |
+| 16 | Stop on last frame |
+| 32 | Upperbody only |
+| 49 | Loop + upperbody + allow movement |
+
+#### PlayAndWait
+
+Plays the animation and yields until it finishes. Releases the dict automatically.
+
+```lua
+lib.anim.PlayAndWait(ped, 'missheistdockssetup1clip_13@base', 'base', 8.0, -8.0, 3000, 49)
+-- thread resumes after 3 seconds
+```
+
+## Stopping Animations
+
+```lua
+-- Stop a specific animation
+lib.anim.Stop(ped, 'amb@world_human_aa_smoke@male@idle_a', 'idle_a')
+
+-- Clear all ped tasks
+lib.anim.Stop(ped)
+```
+
+## Checking State
+
+```lua
+if lib.anim.IsPlaying(ped, dict, clip) then
+    -- animation is still running
+end
+```
+
+## Scenarios
+
+Play ambient scenarios (built-in GTA activities):
+
+```lua
+lib.anim.PlayScenario(ped, 'WORLD_HUMAN_AA_SMOKE', true)  -- true = play enter animation
+lib.anim.PlayScenario(ped, 'WORLD_HUMAN_CLIPBOARD', false) -- false = skip enter
+```
+
+Stop with `lib.anim.Stop(ped)`.

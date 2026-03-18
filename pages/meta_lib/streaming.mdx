@@ -1,0 +1,67 @@
+# Streaming
+
+The streaming module handles asset loading with timeout protection. Wraps FiveM native streaming requests into clean functions that yield until loaded or timeout.
+
+## Model Loading
+
+```lua
+local ok, model = lib.streaming.RequestModel('adder', 5000)
+if ok then
+    -- model is the hash, ready to use
+    local vehicle = CreateVehicle(model, coords.x, coords.y, coords.z, heading, true, false)
+    lib.streaming.ReleaseModel(model)
+end
+```
+
+## Animation Dictionary
+
+```lua
+local ok = lib.streaming.RequestAnimDict('amb@world_human_aa_smoke@male@idle_a')
+if ok then
+    TaskPlayAnim(ped, 'amb@world_human_aa_smoke@male@idle_a', 'idle_a', 8.0, -8.0, -1, 49, 0.0, false, false, false)
+    -- release when done:
+    lib.streaming.ReleaseAnimDict('amb@world_human_aa_smoke@male@idle_a')
+end
+```
+
+## All Loading Functions
+
+| Function | Asset Type | Default Timeout |
+|----------|-----------|-----------------|
+| `RequestModel(model, timeout)` | Ped/vehicle/prop models | 10s |
+| `RequestAnimDict(dict, timeout)` | Animation dictionaries | 10s |
+| `RequestAnimSet(set, timeout)` | Animation sets (movement clipsets) | 10s |
+| `RequestTextureDict(dict, timeout)` | Streamed texture dictionaries | 10s |
+| `RequestPtfxAsset(ptfx, timeout)` | Particle effect assets | 10s |
+| `RequestWeaponAsset(weapon, timeout, flags, extraFlags)` | Weapon assets | 10s |
+| `RequestScaleformMovie(name, timeout)` | Scaleform movies | 10s |
+
+All functions return `true` on success or `false, errorMessage` on failure. `RequestModel` and `RequestWeaponAsset` also return the hash as a second value. `RequestScaleformMovie` returns the scaleform handle.
+
+Models are validated with `IsModelValid` and `IsModelInCdimage` before loading.
+
+## Cleanup Functions
+
+Always release assets when done to free memory:
+
+| Function | Releases |
+|----------|----------|
+| `ReleaseModel(model)` | Model |
+| `ReleaseAnimDict(dict)` | Animation dictionary |
+| `ReleaseAnimSet(set)` | Animation set |
+| `ReleaseTextureDict(dict)` | Texture dictionary |
+| `ReleasePtfxAsset(ptfx)` | Particle effect |
+| `ReleaseWeaponAsset(weapon)` | Weapon asset |
+
+## Generic Request
+
+For custom asset types, use the low-level helper:
+
+```lua
+local loaded = lib.streaming.Request(
+    RequestCollisionAtCoord,     -- request function
+    HasCollisionLoadedAroundEntity, -- check function
+    entity,                      -- asset id
+    5000                         -- timeout
+)
+```

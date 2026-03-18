@@ -9,5 +9,11 @@
   "format": "Formatting",
   "locale": "Locale / i18n",
   "cooldown": "Cooldowns",
-  "cache": "Client Cache"
+  "cache": "Client Cache",
+  "streaming": "Streaming",
+  "anim": "Animations",
+  "scaleform": "Scaleform",
+  "raycast": "Raycast",
+  "dui": "DUI",
+  "cron": "Cron"
 }

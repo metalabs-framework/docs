@@ -1,0 +1,89 @@
+# DUI (Direct User Interface)
+
+The DUI module creates browser-based textures that can be rendered onto game objects. Useful for custom screens, billboards, phone displays, and dynamic textures.
+
+## Creating a DUI
+
+```lua
+local dui = lib.dui.New({
+    url    = 'https://example.com',
+    width  = 1920,
+    height = 1080,
+})
+```
+
+For NUI resources within your server:
+
+```lua
+local dui = lib.dui.New({
+    url    = ('nui://%s/html/screen.html'):format(GetCurrentResourceName()),
+    width  = 512,
+    height = 512,
+})
+```
+
+## Using the Texture
+
+Get the texture dictionary and name to apply to game objects:
+
+```lua
+local txd, txn = dui:GetTexturePair()
+
+-- Apply to a render target, prop, or other texture surface
+AddReplaceTexture('prop_tv_screen', 'prop_tv_screen', txd, txn)
+```
+
+## Changing URL
+
+```lua
+dui:SetUrl('https://different-page.com')
+```
+
+## Sending Messages
+
+Send data to the DUI's NUI frontend:
+
+```lua
+dui:SendMessage({ action = 'update', data = { score = 100 } })
+```
+
+The DUI page receives this via the standard NUI message handler:
+
+```js
+window.addEventListener('message', function(event) {
+    if (event.data.action === 'update') {
+        // handle update
+    }
+});
+```
+
+## Cleanup
+
+Always remove DUI instances when done:
+
+```lua
+dui:Remove()
+```
+
+DUI instances are automatically cleaned up when the resource stops.
+
+## Properties
+
+| Property | Description |
+|----------|-------------|
+| `dui.url` | Current URL |
+| `dui.width` | Width in pixels |
+| `dui.height` | Height in pixels |
+| `dui.txdName` | Runtime texture dictionary name |
+| `dui.txnName` | Runtime texture name |
+
+## Methods
+
+| Method | Description |
+|--------|-------------|
+| `SetUrl(url)` | Change the displayed URL |
+| `SendMessage(data)` | Send data to NUI frontend |
+| `GetTexturePair()` | Returns txdName, txnName |
+| `GetTxdName()` | Returns texture dictionary name |
+| `GetTxnName()` | Returns texture name |
+| `Remove()` | Destroy the DUI instance |

@@ -1,0 +1,110 @@
+# Cron (Server)
+
+The cron module provides server-side scheduled task execution using standard cron expressions.
+
+## Creating a Task
+
+```lua
+local task = lib.cron.New('*/5 * * * *', function(task, date)
+    print('Running every 5 minutes')
+    print(('Time: %02d:%02d'):format(date.hour, date.min))
+end)
+```
+
+## Cron Expression Format
+
+Five fields separated by spaces:
+
+```
+minute  hour  day-of-month  month  day-of-week
+0-59    0-23  1-31          1-12   1-7 (or sun-sat)
+```
+
+### Operators
+
+| Operator | Meaning | Example |
+|----------|---------|---------|
+| `*` | Every value | `* * * * *` = every minute |
+| `,` | List | `1,15,30 * * * *` = minutes 1, 15, 30 |
+| `-` | Range | `0 9-17 * * *` = hourly from 9am to 5pm |
+| `/` | Step | `*/10 * * * *` = every 10 minutes |
+
+### Day Names
+
+Day-of-week supports names: `sun`, `mon`, `tue`, `wed`, `thu`, `fri`, `sat`
+
+```lua
+lib.cron.New('0 9 * * mon-fri', function(task, date)
+    print('Weekday mornings at 9am')
+end)
+```
+
+## Examples
+
+```lua
+-- Every minute
+lib.cron.New('* * * * *', handler)
+
+-- Every hour at minute 0
+lib.cron.New('0 * * * *', handler)
+
+-- Every day at midnight
+lib.cron.New('0 0 * * *', handler)
+
+-- Every Sunday at 3am
+lib.cron.New('0 3 * * sun', handler)
+
+-- First day of every month
+lib.cron.New('0 0 1 * *', handler)
+
+-- Every 15 minutes on weekdays
+lib.cron.New('*/15 * * * mon-fri', handler)
+```
+
+## Task Control
+
+```lua
+local task = lib.cron.New('0 * * * *', handler)
+
+task:Disable()   -- pause without removing
+task:Enable()    -- resume
+task:Cancel()    -- permanently remove
+
+if task:IsEnabled() then
+    -- task is active
+end
+```
+
+## Debug Mode
+
+```lua
+lib.cron.New('*/5 * * * *', handler, { debug = true })
+-- prints "[meta_lib:cron] Task 1 firing at 14:05" on each execution
+```
+
+## Callback Parameters
+
+The job function receives two arguments:
+
+```lua
+lib.cron.New('0 * * * *', function(task, date)
+    -- task: the task object (can call task:Cancel() to self-remove)
+    -- date: os.date('*t') table with year, month, day, hour, min, sec, wday, yday
+
+    if date.wday == 1 then -- Sunday
+        task:Disable() -- skip Sundays
+    end
+end)
+```
+
+## Cleanup
+
+All tasks are automatically cancelled when the resource stops. To manually clear:
+
+```lua
+lib.cron.CancelAll()
+```
+
+## Tick Behavior
+
+The cron system checks every 30 seconds and fires jobs when the current minute matches. Each job fires at most once per minute, regardless of the check interval.

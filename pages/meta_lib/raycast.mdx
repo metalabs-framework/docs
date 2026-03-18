@@ -1,0 +1,86 @@
+# Raycast
+
+The raycast module provides clean wrappers for GTA shapetest natives. Cast rays from coordinates, the camera, or an entity's forward direction.
+
+## From Coordinates
+
+Cast a ray between two points:
+
+```lua
+local result = lib.raycast.FromCoords(startPos, endPos, flags, ignoreEntity)
+if result.hit then
+    print('Hit entity:', result.entity)
+    print('At coords:', result.endCoords)
+end
+```
+
+## From Camera
+
+Cast a ray from the gameplay camera forward. Most common use case for targeting.
+
+```lua
+local result = lib.raycast.FromCamera(10.0)  -- 10 meter distance
+if result.hit then
+    if result.entity ~= 0 then
+        print('Looking at entity:', result.entity)
+    else
+        print('Looking at ground:', result.endCoords)
+    end
+end
+```
+
+The player ped is automatically ignored.
+
+## From Entity
+
+Cast a ray from an entity in its forward direction:
+
+```lua
+local result = lib.raycast.FromEntity(vehicle, 20.0)
+if result.hit then
+    print('Obstacle ahead at:', result.endCoords)
+end
+```
+
+The source entity is automatically ignored.
+
+## Result Table
+
+All raycast functions return:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `hit` | boolean | Whether the ray hit something |
+| `entity` | number | Entity handle hit (0 if hit world geometry) |
+| `endCoords` | vector3 | Position where the ray hit |
+| `surfaceNormal` | vector3 | Normal vector of the hit surface |
+
+## Collision Flags
+
+The `flags` parameter controls what the ray collides with (default 511 = everything):
+
+| Flag | Collides With |
+|------|--------------|
+| 1 | World/map |
+| 2 | Vehicles |
+| 4 | Peds |
+| 8 | Objects |
+| 16 | Water |
+| 256 | Vegetation |
+| 511 | Everything |
+
+Combine flags with addition: `1 + 2 + 16` = world + vehicles + water.
+
+## Example: Interaction Targeting
+
+```lua
+CreateThread(function()
+    while true do
+        local result = lib.raycast.FromCamera(3.0, 2 + 4 + 8)  -- vehicles + peds + objects
+        if result.hit and result.entity ~= 0 then
+            -- draw marker or show interaction prompt
+        end
+        Wait(0)
+    end
+end)
+```

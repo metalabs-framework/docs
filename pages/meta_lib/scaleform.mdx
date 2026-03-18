@@ -1,0 +1,92 @@
+# Scaleform
+
+The scaleform module provides an object-oriented API for loading and interacting with GTA scaleform movies (Flash-based UI elements rendered in-game).
+
+## Creating a Scaleform
+
+```lua
+local sf = lib.scaleform.New('instructional_buttons')
+-- or with options:
+local sf = lib.scaleform.New({
+    name = 'instructional_buttons',
+    fullScreen = false,
+    x = 0.5,
+    y = 0.5,
+    width = 1.0,
+    height = 1.0,
+})
+```
+
+## Calling Methods
+
+Push method calls to the scaleform with automatic parameter type detection:
+
+```lua
+sf:CallMethod('CLEAR_ALL')
+sf:CallMethod('SET_CLEAR_SPACE', 200)
+sf:CallMethod('SET_DATA_SLOT', 0, 'Press ~INPUT_CONTEXT~ to interact')
+sf:CallMethod('DRAW_INSTRUCTIONAL_BUTTONS')
+```
+
+Parameters are auto-typed: integers, floats, booleans, and strings are handled automatically.
+
+#### Return Values
+
+```lua
+local returnHandle = sf:CallMethodReturnInt('GET_RESULT')
+```
+
+## Drawing
+
+#### Continuous Drawing
+
+```lua
+sf:StartDrawing()
+-- scaleform renders every frame until stopped
+Wait(5000)
+sf:StopDrawing()
+```
+
+#### Single Frame
+
+For manual draw loops:
+
+```lua
+CreateThread(function()
+    while showingUI do
+        sf:DrawOnce()
+        Wait(0)
+    end
+end)
+```
+
+#### Fullscreen Toggle
+
+```lua
+sf:SetFullScreen(true)
+sf:StartDrawing()
+```
+
+## Positioning
+
+```lua
+sf:SetPosition(0.5, 0.9, 0.3, 0.1)  -- x, y, width, height (screen-relative)
+```
+
+## Checking State
+
+```lua
+if sf:IsDrawing() then
+    -- currently rendering
+end
+```
+
+## Cleanup
+
+Always dispose when done:
+
+```lua
+sf:Dispose()
+```
+
+This stops drawing and releases the scaleform movie handle.
