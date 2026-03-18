@@ -1,0 +1,170 @@
+# Loans
+
+The loan system handles loan creation, automatic repayment, missed payment tracking, and default handling. Integrates with the [credit system](/meta_eco/credit) for eligibility and interest rate determination.
+
+## Loan Lifecycle
+
+1. **Create** — Credit check, principal disbursed to borrower
+2. **Active** — Scheduled payments auto-deducted at each interval
+3. **Paid** — All installments complete, remaining reaches zero
+4. **Defaulted** — Too many missed payments, loan marked defaulted
+
+## Creating a Loan
+
+#### CreateLoan
+
+```lua
+local loan, err = exports.meta_eco:CreateLoan({
+    borrower_identifier = charId,
+    borrower_account_id = bankAccountId,
+    principal = 50000,
+    reason = 'vehicle_purchase',
+
+    -- Optional (defaults from config):
+    interest_rate = 0.08,            -- 8%, modified by credit tier
+    installments_total = 24,
+    payment_interval_minutes = 1440, -- daily
+    max_missed_payments = 3,
+
+    -- Optional lender (defaults to system):
+    lender_account_id = dealerAccountId,
+    lender_type = 'business',        -- 'system', 'business', or 'player'
+
+    -- Optional:
+    skip_credit_check = false,       -- bypass credit gating for admin/system loans
+    metadata = { vehicle = 'adder' },
+})
+```
+
+**On success**, the principal is disbursed to the borrower (via Transfer if lender account exists, via Deposit if system loan). Credit score receives a `loan_opened` event.
+
+**On denial**, returns a structured denial:
+
+```lua
+-- err = {
+--     denied = true,
+--     score = 180,
+--     tier = 'very_poor',
+--     reasons = {
+--         'credit score too low (minimum: 200)',
+--         'active loan requires at least 5 payments before a new loan (2 made so far)',
+--     },
+-- }
+```
+
+## Repayment
+
+#### MakeLoanPayment
+
+Make a manual payment on a loan.
+
+```lua
+local ok, result = exports.meta_eco:MakeLoanPayment(loanId, 2500, 'manual', { source = 'banking_app' })
+-- result:
+-- {
+--     amount_paid = 2500,
+--     principal_portion = 2125,
+--     interest_portion = 375,
+--     remaining = 47500,
+--     installments_paid = 1,
+--     status = 'active',
+-- }
+```
+
+#### EarlyLoanPayoff
+
+Pay the full remaining balance in one shot. Awards bonus credit score.
+
+```lua
+local ok, result = exports.meta_eco:EarlyLoanPayoff(loanId)
+```
+
+#### CancelLoan
+
+Cancel an active loan. Does not refund — only stops future payments.
+
+```lua
+local ok, err = exports.meta_eco:CancelLoan(loanId, 'admin_override')
+```
+
+## Automatic Payments
+
+A background processor ticks every `LoanTickMs` (default 60s) and checks for loans where `next_payment_at` has passed:
+
+- **Payment succeeds** — installment deducted, `next_payment_at` advanced, credit gets `payment_on_time` (+15)
+- **Payment fails** (insufficient funds) — `missed_payments` incremented, credit gets `payment_missed` (-40)
+- **Max missed reached** — loan status set to `defaulted`, credit gets `loan_defaulted` (-150)
+
+## Query Exports
+
+#### GetLoan
+
+```lua
+local loan = exports.meta_eco:GetLoan(loanId)
+```
+
+#### GetLoansByBorrower
+
+```lua
+local loans = exports.meta_eco:GetLoansByBorrower(charId)
+local active = exports.meta_eco:GetActiveLoansByBorrower(charId)
+```
+
+#### GetLoansByLender
+
+```lua
+local loans = exports.meta_eco:GetLoansByLender(lenderAccountId, 'active')
+```
+
+#### GetLoanPayments
+
+Get the payment history for a loan.
+
+```lua
+local payments = exports.meta_eco:GetLoanPayments(loanId, 50)
+for _, p in ipairs(payments) do
+    print(p.amount, p.principal_portion, p.interest_portion, p.payment_type)
+end
+```
+
+#### GetLoanSummary
+
+Get aggregate loan statistics for a borrower.
+
+```lua
+local summary = exports.meta_eco:GetLoanSummary(charId)
+-- {
+--     total_loans = 5,
+--     active_count = 1,
+--     paid_count = 3,
+--     defaulted_count = 1,
+--     total_outstanding = 25000,
+--     total_repaid = 120000,
+--     total_borrowed = 150000,
+-- }
+```
+
+## Integration Examples
+
+```lua
+-- meta_dealership: vehicle financing
+local eligible, info = exports.meta_eco:CheckLoanEligibility(charId, vehiclePrice)
+if not eligible then
+    -- show info.denial_reasons to player
+    return
+end
+
+exports.meta_eco:CreateLoan({
+    borrower_identifier = charId,
+    borrower_account_id = bankAccountId,
+    lender_account_id = dealerAccountId,
+    lender_type = 'business',
+    principal = vehiclePrice,
+    reason = 'vehicle_purchase',
+    interest_rate = 0.06,
+    installments_total = 30,
+})
+
+-- meta_banking: show active loans in banking app
+local active = exports.meta_eco:GetActiveLoansByBorrower(charId)
+```

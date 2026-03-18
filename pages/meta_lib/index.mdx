@@ -1,0 +1,73 @@
+# meta_lib
+
+Shared utility library for Meta Framework.
+
+## What is meta_lib?
+
+meta_lib provides reusable helpers, standardized patterns, and common utilities so other resources don't duplicate boilerplate. It runs on both client and server.
+
+meta_lib owns **no truth**. It provides tools — never authority. Financial truth belongs in meta_eco, player truth in meta_core.
+
+## API
+
+```lua
+-- Notifications (client)
+exports.meta_lib:Notify({ message = 'Item sold!', type = 'success' })
+
+-- Progress bars (client)
+exports.meta_lib:Progress({ label = 'Searching...', duration = 3000 })
+
+-- Formatting (shared)
+exports.meta_lib:FormatCurrency(50000)      --> "$50,000"
+exports.meta_lib:FormatNumber(1234567)      --> "1,234,567"
+exports.meta_lib:FormatTime(3661)           --> "1h 1m"
+
+-- Translation (shared)
+exports.meta_lib:Translate('error.not_found', 'Account')  --> "Account not found"
+
+-- Validation (shared)
+local result = exports.meta_lib:ValidatePayload(data, schema)
+
+-- Results (shared)
+local ok = exports.meta_lib:Ok({ balance = 500 })
+local err = exports.meta_lib:Err('insufficient_funds', 'Not enough money')
+
+-- Cooldowns (server)
+local allowed, remaining = exports.meta_lib:Cooldown(source, 'atm_withdraw', 5000)
+
+-- Cache (client)
+exports.meta_lib:CacheSet('player_data', data, 60)  -- 60s TTL
+local data = exports.meta_lib:CacheGet('player_data')
+
+-- Callbacks (server)
+exports.meta_lib:RegisterCallback('shop:getItems', function(source, payload)
+    return getShopItems(payload.shopId)
+end)
+```
+
+## Modules
+
+| Module | Side | Purpose |
+|--------|------|---------|
+| **Result** | Shared | Standardized `Ok`/`Err` response pattern |
+| **Validate** | Shared | Schema-based payload validation with type checkers |
+| **Locale** | Shared | i18n translation with locale files |
+| **Format** | Shared | Currency, number, time, and string formatting |
+| **Callbacks** | Client + Server | Request/response pattern (auto-bridges to meta_logic) |
+| **Notify** | Client | Notification API with fallback chain |
+| **Progress** | Client | Timed action progress bars |
+| **Cache** | Client | TTL-based key/value store |
+| **Cooldown** | Server | Rate limiting by player + action |
+| **Request** | Client + Server | Higher-level request helpers |
+
+## Architecture
+
+meta_lib auto-detects meta_logic at runtime. When available, callbacks and requests route through meta_logic's network system. When not available, meta_lib's own net event system works standalone.
+
+```
+[Your Resource] ──exports──> [meta_lib] ──detects──> [meta_logic] (if available)
+                                 │
+                                 └── standalone fallback (own net events)
+```
+
+Notifications cascade: meta_ui → ox_lib → GTA native.

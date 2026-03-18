@@ -1,0 +1,92 @@
+# Callbacks
+
+The callback module provides a clean request/response pattern between client and server. It auto-detects meta_logic and bridges into its route system when available.
+
+## Server: Registering Callbacks
+
+#### RegisterCallback
+
+```lua
+exports.meta_lib:RegisterCallback('shop:getItems', function(source, payload)
+    local items = getShopItems(payload.shopId)
+    if not items then
+        return nil, 'shop not found'
+    end
+    return items
+end)
+```
+
+**Handler signature:** `function(source, payload) -> data, err`
+
+If meta_logic is running, the callback is also registered as a meta_logic route, so clients can reach it via either system.
+
+## Client: Triggering Callbacks
+
+### Callback Style
+
+```lua
+lib.TriggerCallback('shop:getItems', { shopId = 'gun_store' }, function(data, err)
+    if err then
+        print('Error:', err)
+        return
+    end
+    openShopMenu(data)
+end)
+```
+
+### Async Style
+
+```lua
+local data, err = lib.TriggerCallbackAsync('shop:getItems', { shopId = 'gun_store' })
+if err then return end
+openShopMenu(data)
+```
+
+## Timeout
+
+Requests that don't receive a response within `lib.config.callbackTimeout` (default 10s) are cleaned up automatically. The callback receives `nil, 'timeout'`.
+
+## Request Helpers
+
+The request module provides higher-level wrappers:
+
+```lua
+-- Routes through meta_logic if available, otherwise lib callbacks
+lib.request.Server('shop:getItems', { shopId = 'gun_store' }, function(data, err)
+    -- ...
+end)
+
+-- Async version
+local data, err = lib.request.ServerAsync('shop:getItems', { shopId = 'gun_store' })
+
+-- Returns a result object instead of data/err tuple
+local result = lib.request.ServerWithResult('shop:getItems', { shopId = 'gun_store' })
+if lib.IsOk(result) then
+    openShopMenu(result.data)
+end
+```
+
+## Server: Validated Routes
+
+Combine route registration with automatic payload validation:
+
+```lua
+lib.request.RegisterValidatedRoute('shop:buy', {
+    itemId   = { type = 'string', required = true },
+    quantity = { type = 'number', required = true, min = 1, integer = true },
+}, function(source, data)
+    -- data is pre-validated
+    return buyItem(source, data.itemId, data.quantity)
+end)
+```
+
+If validation fails, the client receives an error response automatically.
+
+## Relationship with meta_logic
+
+| Scenario | Behavior |
+|----------|----------|
+| meta_logic running | Callbacks register as meta_logic routes. Client requests go through meta_logic's network. |
+| meta_logic not running | meta_lib uses its own `meta_lib:callback:request` / `meta_lib:callback:response` net events. |
+
+This means resources using meta_lib callbacks work with or without meta_logic present.

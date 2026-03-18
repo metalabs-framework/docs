@@ -1,0 +1,64 @@
+# Installation
+
+## Requirements
+
+- FiveM server with Lua 5.4
+
+No hard dependencies. meta_lib auto-detects optional resources at runtime:
+
+| Resource | Used For |
+|----------|----------|
+| meta_logic | Callback/request routing (falls back to own net events) |
+| meta_ui | Notification rendering (falls back to ox_lib, then GTA native) |
+| ox_lib | Progress bars and notifications (when meta_ui unavailable) |
+
+## Server Config
+
+Add to your `server.cfg`:
+
+```cfg
+ensure meta_lib
+```
+
+If using other Meta resources, start meta_lib **before** feature resources:
+
+```cfg
+ensure oxmysql
+ensure meta_core
+ensure meta_logic
+ensure meta_lib
+ensure meta_eco
+-- feature resources after this
+```
+
+## Configuration
+
+The `lib.config` table in `shared/config.lua`:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `debug` | `false` | Enable debug logging |
+| `defaultLocale` | `'en'` | Default language for translations |
+| `notifyResource` | `'meta_ui'` | Resource to route notifications to |
+| `progressResource` | `'meta_ui'` | Resource to route progress bars to |
+| `callbackTimeout` | `10000` | Callback timeout in milliseconds |
+| `cacheDefaultTTL` | `60` | Default cache entry TTL in seconds |
+| `cooldownCleanupInterval` | `30000` | How often expired cooldowns are cleaned up |
+
+## Adding Locales
+
+Create a locale file at `shared/locales/<code>.lua`:
+
+```lua
+lib.locales['es'] = {
+    ['error.unknown'] = 'Ocurrio un error desconocido',
+    ['error.not_found'] = '%s no encontrado',
+    -- ...
+}
+```
+
+Set active locale:
+
+```lua
+lib.locale.SetLocale('es')
+```

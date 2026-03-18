@@ -1,0 +1,92 @@
+# Business Accounts
+
+Business accounts provide shared financial accounts with member access control. Society accounts work the same way for job/faction funds.
+
+## Creating a Business Account
+
+```lua
+local account, err = exports.meta_eco:CreateBusinessAccount(
+    'benny_motors',              -- business ID
+    'Benny\'s Motorworks',       -- display label
+    ownerCharId,                 -- owner identifier
+    { location = 'los_santos' }  -- optional metadata
+)
+```
+
+This creates a `business` type account and grants the owner `OWNER` access level.
+
+## Lookups
+
+#### GetBusinessAccount
+
+```lua
+local account = exports.meta_eco:GetBusinessAccount('benny_motors')
+-- returns: { id, account_type, owner_id, balance, frozen, ... }
+```
+
+#### GetBusinessAccounts
+
+Get all business accounts a member has access to.
+
+```lua
+local accounts = exports.meta_eco:GetBusinessAccounts(charId)
+for _, acct in ipairs(accounts) do
+    print(acct.label, acct.balance, acct.access_level)
+end
+```
+
+## Access Control
+
+#### SetBusinessAccess
+
+Grant or update access for a member.
+
+```lua
+exports.meta_eco:SetBusinessAccess(accountId, employeeCharId, Eco.AccessLevel.DEPOSIT, grantedByCharId)
+```
+
+#### RemoveBusinessAccess
+
+Remove a member's access. Cannot remove the owner.
+
+```lua
+exports.meta_eco:RemoveBusinessAccess(accountId, employeeCharId)
+```
+
+#### GetBusinessMembers
+
+List all members and their access levels.
+
+```lua
+local members = exports.meta_eco:GetBusinessMembers(accountId)
+for _, member in ipairs(members) do
+    print(member.identifier, member.access_level, member.granted_by)
+end
+```
+
+## Access Levels
+
+| Level | Value | Allows |
+|-------|-------|--------|
+| `NONE` | 0 | Nothing |
+| `VIEW` | 1 | View balance and history |
+| `DEPOSIT` | 2 | View + deposit |
+| `WITHDRAW` | 3 | View + deposit + withdraw |
+| `MANAGE` | 4 | All operations + manage members |
+| `OWNER` | 5 | Full control |
+
+## Integration Example
+
+```lua
+-- meta_dealership: charge customer, deposit to dealer account
+local dealerAcct = exports.meta_eco:GetBusinessAccount('premium_deluxe')
+local customerAcct = exports.meta_eco:GetAccount('personal', charId, 'bank')
+
+local ok, result = exports.meta_eco:Transfer(
+    customerAcct.id,
+    dealerAcct.id,
+    vehiclePrice,
+    'vehicle_purchase',
+    { vehicle = 'adder', plate = 'ABC123' }
+)
+```

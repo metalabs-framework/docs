@@ -3,4 +3,11 @@ const withNextra = require('nextra')({
   themeConfig: './theme.config.tsx',
 });
 
-module.exports = withNextra();
+const isGithubPages = process.env.GITHUB_PAGES === 'true';
+
+module.exports = withNextra({
+  output: 'export',
+  images: { unoptimized: true },
+  basePath: isGithubPages ? '/docs' : '',
+  assetPrefix: isGithubPages ? '/docs/' : '',
+});

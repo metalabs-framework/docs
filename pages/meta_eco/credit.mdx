@@ -1,0 +1,135 @@
+# Credit System
+
+The credit system tracks borrower reliability and determines loan eligibility, interest rates, and borrowing limits. Every loan event automatically adjusts the borrower's credit score.
+
+## Credit Score
+
+Every borrower has a score from **0 to 1000** (default 500). The score determines their **credit tier**, which controls loan terms.
+
+## Tiers
+
+| Tier | Score Range | Max Loans | Interest Modifier | Max Principal |
+|------|------------|-----------|-------------------|---------------|
+| Excellent | 800+ | 5 | -2% | 3x base |
+| Good | 650–799 | 4 | -1% | 2x base |
+| Fair | 400–649 | 3 | +0% | 1x base |
+| Poor | 200–399 | 2 | +2% | 0.5x base |
+| Very Poor | 0–199 | 1 | +5% | 0.25x base |
+
+Interest modifier is applied on top of the base rate. A 5% base rate with an "Excellent" tier becomes 3%.
+
+Max principal is a multiplier on `LoanMaxPrincipal` config. If base max is $10,000,000, an "Excellent" borrower can borrow up to $30,000,000.
+
+## Score Events
+
+Score changes happen automatically during loan lifecycle:
+
+| Event | Delta | Trigger |
+|-------|-------|---------|
+| `loan_opened` | -10 | New loan created |
+| `payment_on_time` | +15 | Scheduled payment succeeds |
+| `payment_missed` | -40 | Scheduled payment fails |
+| `loan_paid_off` | +50 | Loan fully repaid |
+| `loan_early_payoff` | +75 | Loan paid off early |
+| `loan_defaulted` | -150 | Max missed payments reached |
+
+All events are logged to `meta_credit_events` with before/after scores.
+
+## Eligibility Rules
+
+When `CreateLoan` is called, the credit system checks:
+
+1. **Minimum score** — Must be at least `CreditMinScoreForLoan` (200)
+2. **Active loan limit** — Based on credit tier
+3. **Principal limit** — Based on credit tier multiplier
+4. **Payment history** — All active loans must have at least `CreditMinPaymentsBeforeNewLoan` (5) payments made
+
+If any check fails, the loan is denied with structured reasons.
+
+## Exports
+
+#### GetCreditProfile
+
+Full credit profile with all stats.
+
+```lua
+local profile = exports.meta_eco:GetCreditProfile(charId)
+-- {
+--     identifier, score, tier,
+--     total_loans, paid_loans, defaulted_loans,
+--     on_time_payments, missed_payments,
+--     total_borrowed, total_repaid,
+--     last_loan_at, last_default_at,
+-- }
+```
+
+#### GetCreditScore / GetCreditTier
+
+```lua
+local score = exports.meta_eco:GetCreditScore(charId)  -- 650
+local tier = exports.meta_eco:GetCreditTier(charId)    -- 'good'
+```
+
+#### GetCreditReport
+
+Comprehensive report with profile, current limits, and recent events.
+
+```lua
+local report = exports.meta_eco:GetCreditReport(charId)
+-- {
+--     score = 720, tier = 'good',
+--     stats = { total_loans = 5, payment_ratio = 0.92, ... },
+--     limits = { max_loans = 4, active_loans = 1, max_principal = 20000000, interest_modifier = -0.01 },
+--     recent_events = { ... },
+-- }
+```
+
+#### CheckLoanEligibility
+
+Pre-check before showing loan options. Does not create a loan.
+
+```lua
+local eligible, info = exports.meta_eco:CheckLoanEligibility(charId, 50000)
+if eligible then
+    -- info.max_principal, info.interest_modifier, info.max_loans
+else
+    -- info.denial_reasons = { 'credit score too low', ... }
+end
+```
+
+#### GetCreditHistory
+
+Paginated log of all score changes.
+
+```lua
+local events = exports.meta_eco:GetCreditHistory(charId, 20, 0)
+for _, ev in ipairs(events) do
+    print(ev.event_type, ev.score_before, ev.score_after, ev.delta, ev.description)
+end
+```
+
+#### AdjustCreditScore
+
+Manual admin/system adjustment.
+
+```lua
+local ok, result = exports.meta_eco:AdjustCreditScore(charId, 100, 'goodwill_bonus')
+-- result: { score_before = 500, score_after = 600, delta = 100, tier = 'fair' }
+```
+
+## Integration Example
+
+```lua
+-- meta_banking: credit report screen
+local report = exports.meta_eco:GetCreditReport(charId)
+-- Display: score, tier, payment ratio, active loans, max borrowing power
+
+-- meta_banking: loan application
+local eligible, info = exports.meta_eco:CheckLoanEligibility(charId, requestedAmount)
+if not eligible then
+    -- Show denial reasons to player
+    for _, reason in ipairs(info.denial_reasons) do
+        TriggerClientEvent('banking:notify', source, reason)
+    end
+end
+```

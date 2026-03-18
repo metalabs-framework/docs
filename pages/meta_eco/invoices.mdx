@@ -1,0 +1,76 @@
+# Invoices
+
+Invoices allow one account to bill another identifier. The target can pay or let the invoice expire.
+
+## Invoice Flow
+
+1. Issuer creates an invoice targeting a borrower identifier
+2. Invoice starts in `pending` status with a due date
+3. Target pays the invoice, which transfers money to the issuer account
+4. Or the issuer cancels it, or it expires past the due date
+
+## Statuses
+
+| Status | Description |
+|--------|-------------|
+| `pending` | Awaiting payment |
+| `paid` | Successfully paid |
+| `cancelled` | Cancelled by issuer |
+| `expired` | Past due date without payment |
+
+## Exports
+
+#### CreateInvoice
+
+```lua
+local invoice, err = exports.meta_eco:CreateInvoice({
+    issuer_account_id = businessAccountId,
+    target_identifier = customerCharId,
+    amount = 2500,
+    reason = 'vehicle_repair',
+    description = 'Engine rebuild - Sultan RS',
+    due_days = 14,               -- optional, defaults to InvoiceExpiryDays (30)
+    metadata = { vehicle = 'sultan' }, -- optional
+})
+```
+
+#### PayInvoice
+
+Transfers the invoice amount from the payer's account to the issuer's account.
+
+```lua
+local ok, result = exports.meta_eco:PayInvoice(invoiceId, payerAccountId, { paid_via = 'banking_app' })
+```
+
+Returns `false, 'insufficient_funds'` if the payer can't afford it. Returns `false, 'invoice_expired'` if past due.
+
+#### CancelInvoice
+
+Only pending invoices can be cancelled.
+
+```lua
+local ok, err = exports.meta_eco:CancelInvoice(invoiceId, 'manager_override')
+```
+
+#### GetInvoice
+
+```lua
+local invoice = exports.meta_eco:GetInvoice(invoiceId)
+```
+
+#### GetInvoicesByTarget
+
+Get all invoices sent to an identifier, optionally filtered by status.
+
+```lua
+local pending = exports.meta_eco:GetInvoicesByTarget(charId, 'pending')
+local all = exports.meta_eco:GetInvoicesByTarget(charId)
+```
+
+#### GetInvoicesByIssuer
+
+Get all invoices sent from an account.
+
+```lua
+local invoices = exports.meta_eco:GetInvoicesByIssuer(businessAccountId, 'paid')
+```

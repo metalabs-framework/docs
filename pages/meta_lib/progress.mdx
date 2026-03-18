@@ -1,0 +1,100 @@
+# Progress Bars
+
+The progress module provides timed action bars with animation support, control disabling, and cancel handling.
+
+## Usage
+
+#### Basic Progress
+
+```lua
+exports.meta_lib:Progress({
+    label    = 'Searching vehicle...',
+    duration = 5000,
+    onFinish = function()
+        print('Search complete')
+    end,
+    onCancel = function()
+        print('Search cancelled')
+    end,
+})
+```
+
+#### Full Options
+
+```lua
+lib.Progress({
+    label     = 'Repairing engine...',
+    duration  = 8000,
+    canCancel = true,            -- allow player to cancel with X key (default true)
+
+    anim = {
+        dict = 'mini@repair',
+        clip = 'fixing_a_ped',
+        flag = 49,
+    },
+
+    prop = {
+        model = 'prop_tool_wrench',
+        bone  = 57005,
+        pos   = vec3(0.12, 0.04, -0.01),
+        rot   = vec3(10.0, 0.0, 0.0),
+    },
+
+    disableControls = {
+        move   = true,
+        combat = true,
+        car    = true,
+        mouse  = false,
+    },
+
+    onFinish = function()
+        repairVehicle()
+    end,
+
+    onCancel = function()
+        lib.notify.Warning('Repair cancelled')
+    end,
+})
+```
+
+## Cancelling
+
+#### Player Cancel
+
+Players press **X** to cancel (when `canCancel = true`).
+
+#### Programmatic Cancel
+
+```lua
+exports.meta_lib:CancelProgress()
+```
+
+## Single Progress Rule
+
+Only one progress bar can be active at a time. Starting a new one while another is active returns `false, 'progress already active'`.
+
+```lua
+if lib.progress.IsActive() then
+    lib.notify.Warning('Already busy')
+    return
+end
+```
+
+## Fallback Chain
+
+1. **ox_lib** — uses `exports.ox_lib:progressBar()` (if ox_lib is started)
+2. **Built-in** — timer thread with X-key cancel detection and control disabling
+
+## Events
+
+Resources can listen for progress lifecycle:
+
+```lua
+AddEventHandler('meta_lib:progress:start', function(data)
+    -- data: { label, duration, canCancel }
+end)
+
+AddEventHandler('meta_lib:progress:cancel', function()
+    -- progress was cancelled
+end)
+```

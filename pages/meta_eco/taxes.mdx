@@ -1,0 +1,85 @@
+# Taxes
+
+The tax system provides configurable tax rules that can be applied to any transaction. Rules are stored in the database and cached at runtime.
+
+## Tax Rules
+
+Each rule defines a rate, a type category, and optional amount thresholds.
+
+| Field | Description |
+|-------|-------------|
+| `tax_type` | Category (e.g. `sales`, `income`, `property`) |
+| `label` | Display name |
+| `rate` | Decimal rate between 0 and 1 (e.g. 0.07 = 7%) |
+| `applies_to` | Filter (`all` or a specific category) |
+| `min_amount` | Only apply if amount is at or above this threshold |
+| `max_amount` | Only apply if amount is at or below this threshold |
+| `enabled` | Active/inactive toggle |
+
+## Exports
+
+#### CalculateTax
+
+Calculate tax on an amount without deducting it.
+
+```lua
+local result = exports.meta_eco:CalculateTax('sales', 10000, { category = 'vehicle' })
+-- {
+--     tax = 700,
+--     net_amount = 9300,
+--     gross_amount = 10000,
+--     effective_rate = 0.07,
+--     rules_applied = {
+--         { rule_id = 1, label = 'State Sales Tax', rate = 0.07, tax_amount = 700 },
+--     },
+-- }
+```
+
+Multiple rules of the same type stack — each rule that matches is applied.
+
+#### GetTaxRules
+
+Get all rules, or filtered by type.
+
+```lua
+local allRules = exports.meta_eco:GetTaxRules()
+local salesRules = exports.meta_eco:GetTaxRules('sales')
+```
+
+#### AddTaxRule
+
+```lua
+local ruleId = exports.meta_eco:AddTaxRule({
+    tax_type = 'sales',
+    label = 'State Sales Tax',
+    rate = 0.07,
+    applies_to = 'all',
+    min_amount = 100,    -- optional
+    max_amount = nil,    -- optional
+})
+```
+
+#### UpdateTaxRule
+
+Partial updates — only supply fields you want to change.
+
+```lua
+exports.meta_eco:UpdateTaxRule(ruleId, {
+    rate = 0.08,
+    enabled = false,
+})
+```
+
+## Integration Example
+
+```lua
+-- meta_dealership: apply sales tax on vehicle purchase
+local tax = exports.meta_eco:CalculateTax('sales', vehiclePrice, { category = 'vehicle' })
+local totalCost = vehiclePrice + tax.tax
+
+exports.meta_eco:Withdraw(buyerAccountId, totalCost, 'vehicle_purchase', {
+    base_price = vehiclePrice,
+    tax = tax.tax,
+    rules = tax.rules_applied,
+})
+```

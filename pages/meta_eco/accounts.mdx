@@ -1,0 +1,162 @@
+# Accounts
+
+Accounts are the foundation of meta_eco. Every balance lives in an account. Every transaction references an account.
+
+## Account Types
+
+| Type | Purpose | Owner |
+|------|---------|-------|
+| `personal` | Player character wallets | Character ID |
+| `business` | Business finances | Business ID |
+| `society` | Job/faction shared funds | Job/faction name |
+
+## Subtypes
+
+Personal accounts use subtypes to separate wallets:
+
+| Subtype | Description |
+|---------|-------------|
+| `cash` | Physical cash on hand |
+| `bank` | Bank balance |
+| `crypto` | Cryptocurrency |
+
+Business and society accounts default to `bank`.
+
+## Auto-Creation
+
+When a character loads (`meta_core:server:charLoaded`), meta_eco automatically creates personal accounts for each subtype in `Eco.Config.DefaultPersonalAccounts`. If accounts already exist, they're loaded from the database.
+
+## Account Lookup Exports
+
+#### GetAccount
+
+Get an account by type, owner, and subtype.
+
+```lua
+local account = exports.meta_eco:GetAccount('personal', charId, 'bank')
+-- returns: { id, account_type, account_subtype, owner_id, label, balance, frozen, metadata }
+```
+
+#### GetAccountById
+
+Get an account by its database ID.
+
+```lua
+local account = exports.meta_eco:GetAccountById(42)
+```
+
+#### GetAccountBalance
+
+Get just the balance of an account.
+
+```lua
+local balance = exports.meta_eco:GetAccountBalance(accountId)
+```
+
+#### GetAccountsByOwner
+
+Get all accounts belonging to an owner.
+
+```lua
+local accounts = exports.meta_eco:GetAccountsByOwner(charId)
+for _, acct in ipairs(accounts) do
+    print(acct.account_subtype, acct.balance)
+end
+```
+
+#### CreateAccount
+
+Manually create an account.
+
+```lua
+local account, err = exports.meta_eco:CreateAccount('society', 'police', 'bank', 'LSPD Fund', 100000)
+```
+
+## Balance Mutation Exports
+
+Every mutation validates amounts server-side, checks frozen status, and writes a transaction record.
+
+#### Deposit
+
+```lua
+local ok, newBalance = exports.meta_eco:Deposit(accountId, 500, 'salary', { job = 'police' })
+```
+
+#### Withdraw
+
+Returns `false, 'insufficient_funds'` if balance is too low.
+
+```lua
+local ok, newBalance = exports.meta_eco:Withdraw(accountId, 200, 'purchase', { item = 'bread' })
+```
+
+#### Transfer
+
+Atomically moves money between two accounts. Both must exist and not be frozen.
+
+```lua
+local ok, result = exports.meta_eco:Transfer(fromId, toId, 1000, 'bank_transfer')
+-- result: { from_balance, to_balance }
+```
+
+#### SetBalance
+
+Force-set a balance. Use sparingly — intended for admin corrections.
+
+```lua
+local ok, newBalance = exports.meta_eco:SetBalance(accountId, 50000, 'admin_adjustment')
+```
+
+## Freeze / Unfreeze
+
+Frozen accounts block all deposits, withdrawals, and transfers.
+
+```lua
+exports.meta_eco:FreezeAccount(accountId, 'investigation')
+exports.meta_eco:UnfreezeAccount(accountId, 'cleared')
+```
+
+## Access Control
+
+#### HasAccountAccess
+
+Check if an identifier has a required access level on an account.
+
+```lua
+local hasAccess = exports.meta_eco:HasAccountAccess(charId, accountId, Eco.AccessLevel.WITHDRAW)
+```
+
+#### GetAccountAccess
+
+Get the numeric access level an identifier has on an account.
+
+```lua
+local level = exports.meta_eco:GetAccountAccess(charId, accountId)
+```
+
+Personal accounts grant `OWNER` to the owning character. Business/society accounts use the `meta_business_access` table.
+
+## Access Levels
+
+| Level | Value | Allows |
+|-------|-------|--------|
+| `NONE` | 0 | Nothing |
+| `VIEW` | 1 | View balance and history |
+| `DEPOSIT` | 2 | View + deposit |
+| `WITHDRAW` | 3 | View + deposit + withdraw |
+| `MANAGE` | 4 | All operations + manage members |
+| `OWNER` | 5 | Full control |
+
+## Amount Validation
+
+All amounts are validated before processing:
+
+- Must be a number (not NaN, not Infinity)
+- Must be positive
+- Must not exceed `MaxTransferAmount`
+- Rounded to 2 decimal places to prevent float exploits
+- Stored as cents (BIGINT) in the database, converted at read time
+
+## Balances in the Database
+
+Balances are stored as **cents** (`BIGINT`) to avoid floating-point issues. The API handles conversion automatically — you always work with dollar amounts in your code.

@@ -1,0 +1,110 @@
+# Transactions & Ledger
+
+Every balance mutation in meta_eco writes an immutable transaction record. This provides a complete audit trail for all financial activity.
+
+## Transaction Record
+
+Each transaction stores:
+
+| Field | Description |
+|-------|-------------|
+| `account_id` | The account that was affected |
+| `transaction_type` | `deposit`, `withdraw`, `transfer`, `invoice`, `payroll`, `tax`, `refund`, `system` |
+| `amount` | The amount involved |
+| `balance_before` | Balance before the mutation |
+| `balance_after` | Balance after the mutation |
+| `reason` | Auditable reason code (e.g. `salary`, `purchase`, `loan_repayment`) |
+| `description` | Optional human-readable description |
+| `related_account_id` | The other account in a transfer |
+| `related_transaction_id` | Linked transaction (e.g. debit side of a transfer) |
+| `source_resource` | The resource that initiated the mutation |
+| `source_player` | The player who triggered it |
+| `metadata` | Optional JSON metadata |
+| `created_at` | Timestamp |
+
+## Transfers Create Pairs
+
+A transfer writes **two** linked transactions — a debit on the source account and a credit on the destination. They reference each other via `related_transaction_id`.
+
+## Reason Codes
+
+Use `Eco.Reasons` constants for auditable reason codes:
+
+```lua
+Eco.Reasons.SALARY           -- 'salary'
+Eco.Reasons.PURCHASE         -- 'purchase'
+Eco.Reasons.BANK_TRANSFER    -- 'bank_transfer'
+Eco.Reasons.INVOICE_PAYMENT  -- 'invoice_payment'
+Eco.Reasons.LOAN_DISBURSEMENT -- 'loan_disbursement'
+Eco.Reasons.LOAN_REPAYMENT   -- 'loan_repayment'
+Eco.Reasons.PAYROLL_PAYMENT  -- 'payroll_payment'
+Eco.Reasons.TAX_DEDUCTION    -- 'tax_deduction'
+Eco.Reasons.ADMIN_ADJUSTMENT -- 'admin_adjustment'
+Eco.Reasons.VEHICLE_PURCHASE -- 'vehicle_purchase'
+-- ... and more
+```
+
+## Query Exports
+
+#### GetTransactionsByAccount
+
+Get transactions for a specific account, newest first.
+
+```lua
+local txns = exports.meta_eco:GetTransactionsByAccount(accountId, 50, 0)
+for _, tx in ipairs(txns) do
+    print(tx.transaction_type, tx.amount, tx.reason, tx.created_at)
+end
+```
+
+#### GetTransactions
+
+Query transactions with flexible filters.
+
+```lua
+local txns = exports.meta_eco:GetTransactions({
+    account_id = accountId,
+    transaction_type = 'transfer',
+    reason = 'bank_transfer',
+    source_player = charId,
+    from_date = '2025-01-01',
+    to_date = '2025-12-31',
+    limit = 100,
+    offset = 0,
+})
+```
+
+## Ledger Exports
+
+The ledger module wraps transactions with higher-level aggregation.
+
+#### GetLedger
+
+Get ledger entries for an account with optional filters.
+
+```lua
+local entries = exports.meta_eco:GetLedger(accountId, {
+    transaction_type = 'deposit',
+    limit = 20,
+})
+```
+
+#### GetLedgerSummary
+
+Get aggregated financial summary for an account over a time period.
+
+```lua
+local summary = exports.meta_eco:GetLedgerSummary(accountId, 30)
+-- returns:
+-- {
+--     account_id = 42,
+--     period_days = 30,
+--     total_in = 15000,
+--     total_out = 8500,
+--     net = 6500,
+--     by_type = {
+--         deposit = { count = 12, total_in = 10000, total_out = 0 },
+--         transfer = { count = 5, total_in = 5000, total_out = 8500 },
+--     },
+-- }
+```

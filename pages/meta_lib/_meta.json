@@ -1,0 +1,13 @@
+{
+  "index": "Overview",
+  "installation": "Installation",
+  "result": "Result Pattern",
+  "validate": "Validation",
+  "callbacks": "Callbacks",
+  "notify": "Notifications",
+  "progress": "Progress Bars",
+  "format": "Formatting",
+  "locale": "Locale / i18n",
+  "cooldown": "Cooldowns",
+  "cache": "Client Cache"
+}

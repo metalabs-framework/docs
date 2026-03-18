@@ -1,0 +1,107 @@
+# Payroll
+
+Payroll allows businesses to pay multiple employees in a single batch operation. Supports both manual one-off runs and recurring scheduled payroll.
+
+## Manual Payroll
+
+#### ProcessPayroll
+
+Execute a one-time payroll batch. Transfers from the business account to each recipient's personal account.
+
+```lua
+local result = exports.meta_eco:ProcessPayroll(
+    'benny_motors',                -- business ID
+    {                              -- entries
+        { identifier = '1', amount = 500 },
+        { identifier = '2', amount = 750 },
+        { identifier = '3', amount = 500, subtype = 'crypto' }, -- optional subtype
+    },
+    managerCharId,                 -- initiated by
+    { period = 'weekly' }          -- optional metadata
+)
+-- result:
+-- {
+--     run_id = 1,
+--     status = 'completed',
+--     processed = 3,
+--     failed = 0,
+--     total_amount = 1750,
+--     errors = {},
+-- }
+```
+
+If a recipient's account doesn't exist or the transfer fails, that entry is marked `failed` and the rest continue. The business account must have sufficient funds for the total amount.
+
+#### GetPayrollRun
+
+Get details of a specific payroll run including all individual entries.
+
+```lua
+local run = exports.meta_eco:GetPayrollRun(runId)
+-- includes run.entries with per-recipient status
+```
+
+#### GetPayrollHistory
+
+Get recent payroll runs for a business.
+
+```lua
+local runs = exports.meta_eco:GetPayrollHistory('benny_motors', 20)
+```
+
+## Scheduled Payroll
+
+Schedules automatically fire payroll at a recurring interval.
+
+#### CreatePayrollSchedule
+
+```lua
+local schedule = exports.meta_eco:CreatePayrollSchedule({
+    business_id = 'benny_motors',
+    label = 'Weekly Salary',
+    interval_minutes = 10080,      -- 7 days
+    entries = {
+        { identifier = '1', amount = 500 },
+        { identifier = '2', amount = 750 },
+    },
+    created_by = managerCharId,
+})
+```
+
+The scheduler ticks every `PayrollSchedulerTickMs` (default 60s), checks `next_run_at`, and fires `ProcessPayroll` when due.
+
+#### GetPayrollSchedule
+
+```lua
+local schedule = exports.meta_eco:GetPayrollSchedule(scheduleId)
+```
+
+#### GetPayrollSchedulesByBusiness
+
+```lua
+local schedules = exports.meta_eco:GetPayrollSchedulesByBusiness('benny_motors')
+```
+
+#### UpdatePayrollSchedule
+
+Partial updates — only supply the fields you want to change.
+
+```lua
+exports.meta_eco:UpdatePayrollSchedule(scheduleId, {
+    interval_minutes = 20160,  -- change to biweekly
+    entries = newEntries,      -- update recipient list
+})
+```
+
+#### EnablePayrollSchedule / DisablePayrollSchedule
+
+```lua
+exports.meta_eco:DisablePayrollSchedule(scheduleId)
+exports.meta_eco:EnablePayrollSchedule(scheduleId)
+```
+
+#### DeletePayrollSchedule
+
+```lua
+exports.meta_eco:DeletePayrollSchedule(scheduleId)
+```

@@ -1,0 +1,73 @@
+# Locale / i18n
+
+The locale module provides translation support with variable interpolation. Ships with English and supports adding any language.
+
+## Usage
+
+#### Translate
+
+```lua
+local msg = exports.meta_lib:Translate('error.not_found', 'Account')
+--> "Account not found"
+
+local msg = lib.t('error.on_cooldown')
+--> "Please wait before trying again"
+```
+
+`lib.t` is a shorthand for `lib.Translate`.
+
+## Built-in Keys
+
+```lua
+['error.unknown']            = 'An unknown error occurred'
+['error.invalid_input']      = 'Invalid input provided'
+['error.not_found']          = '%s not found'
+['error.not_authorized']     = 'You are not authorized to do that'
+['error.insufficient_funds'] = 'Insufficient funds'
+['error.on_cooldown']        = 'Please wait before trying again'
+['error.timeout']            = 'Request timed out'
+['notify.success']           = 'Success'
+['notify.error']             = 'Error'
+['progress.cancelled']       = 'Action cancelled'
+['progress.completed']       = 'Action completed'
+['format.currency']          = '$%s'
+['format.percent']           = '%s%%'
+```
+
+## Adding Languages
+
+Create a locale file at `shared/locales/<code>.lua`:
+
+```lua
+lib.locales['es'] = {
+    ['error.unknown']           = 'Ocurrio un error desconocido',
+    ['error.not_found']         = '%s no encontrado',
+    ['error.not_authorized']    = 'No estas autorizado para hacer eso',
+    ['error.insufficient_funds'] = 'Fondos insuficientes',
+    -- ...
+}
+```
+
+## Changing Locale
+
+```lua
+lib.locale.SetLocale('es')
+lib.locale.GetLocale()  --> 'es'
+```
+
+## Registering Translations at Runtime
+
+Other resources can add their own translation keys:
+
+```lua
+lib.locale.RegisterLocale('en', {
+    ['banking.welcome']       = 'Welcome to the bank, %s',
+    ['banking.transfer_sent'] = 'Transferred $%s to %s',
+})
+```
+
+Keys are merged into the existing locale — no overwriting of existing keys unless intended.
+
+## Fallback
+
+If a key isn't found in the active locale, it falls back to English. If not found in English either, the raw key string is returned.

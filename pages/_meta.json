@@ -2,5 +2,7 @@
   "index": "Introduction",
   "meta_core": "meta_core",
   "meta_logic": "meta_logic",
+  "meta_lib": "meta_lib",
+  "meta_eco": "meta_eco",
   "meta_bridge_qb": "meta_bridge_qb"
 }

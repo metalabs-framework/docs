@@ -1,0 +1,65 @@
+# meta_eco
+
+Server-authoritative economy layer for Meta Framework.
+
+## What is meta_eco?
+
+meta_eco is a **server-only** resource (`server_only 'yes'`) that owns all financial truth. It is the single source of truth for money, accounts, transactions, invoices, payroll, taxes, loans, and credit scores.
+
+No client-side code exists in meta_eco. All interactions happen through server exports.
+
+Other resources like meta_banking, meta_dealership, and meta_pawnshop **consume** meta_eco — they never handle money directly.
+
+## API
+
+All economy operations go through exports:
+
+```lua
+-- Account lookups
+exports.meta_eco:GetAccount('personal', charId, 'bank')
+exports.meta_eco:GetAccountsByOwner(charId)
+
+-- Balance mutations (all audited)
+exports.meta_eco:Deposit(accountId, 500, 'salary')
+exports.meta_eco:Withdraw(accountId, 200, 'purchase')
+exports.meta_eco:Transfer(fromId, toId, 1000, 'bank_transfer')
+
+-- Invoices
+exports.meta_eco:CreateInvoice({ issuer_account_id = acctId, target_identifier = charId, amount = 500, reason = 'fine' })
+exports.meta_eco:PayInvoice(invoiceId, payerAccountId)
+
+-- Loans & credit
+exports.meta_eco:CheckLoanEligibility(charId, 50000)
+exports.meta_eco:CreateLoan({ borrower_identifier = charId, borrower_account_id = acctId, principal = 50000, reason = 'vehicle_purchase' })
+
+-- Business finance
+exports.meta_eco:CreateBusinessAccount('benny_motors', 'Benny\'s Motorworks', ownerCharId)
+exports.meta_eco:ProcessPayroll('benny_motors', entries, initiatedBy)
+```
+
+## Modules
+
+| Module | Responsibility |
+|--------|---------------|
+| **Accounts** | Personal/business/society account CRUD, balance operations, freeze/unfreeze |
+| **Transactions** | Immutable transaction log, reason tracking, query engine |
+| **Ledgers** | Ledger entries and summary aggregation |
+| **Invoices** | Create, pay, cancel, expire invoices between accounts |
+| **Businesses** | Business account creation and member access control |
+| **Payroll** | Manual batch payroll and scheduled automatic payroll |
+| **Taxes** | Configurable tax rules with calculation engine |
+| **Loans** | Loan creation, repayment, scheduled payments, early payoff, default handling |
+| **Credit** | Credit scoring, tier system, eligibility checks, score events |
+| **Validation** | Amount, account, and permission validation |
+
+## Architecture
+
+meta_eco listens to `meta_core:server:charLoaded` to bootstrap personal accounts. All balance mutations write to `meta_transactions` for full auditability.
+
+```
+[Feature Resource] ──exports──> [meta_eco] ──audits──> [meta_transactions]
+                                     │
+                                     └── [meta_core] (identity/session context)
+```
+
+meta_eco never trusts client input. All amounts, accounts, and permissions are validated server-side.

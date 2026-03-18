@@ -1,0 +1,58 @@
+# Notifications
+
+The notify module provides a consistent notification API for all Meta resources. It cascades through available renderers.
+
+## Usage
+
+#### Simple String
+
+```lua
+exports.meta_lib:Notify('Item added to inventory')
+```
+
+#### Full Options
+
+```lua
+exports.meta_lib:Notify({
+    message  = 'Vehicle purchased!',
+    type     = 'success',        -- 'success', 'error', 'info', 'warning'
+    duration = 5000,             -- milliseconds
+    title    = 'Dealership',     -- optional header
+    icon     = 'car',            -- optional icon
+    position = 'top-right',     -- optional position
+})
+```
+
+## Shorthand Methods
+
+```lua
+lib.notify.Success('Transaction complete')
+lib.notify.Error('Insufficient funds')
+lib.notify.Info('Store opens at 9 AM')
+lib.notify.Warning('Low fuel')
+```
+
+Each accepts an optional second argument for duration:
+
+```lua
+lib.notify.Success('Saved!', 3000)
+```
+
+## Notification Types
+
+| Type | Constant |
+|------|----------|
+| `success` | `lib.const.NOTIFY_TYPE.SUCCESS` |
+| `error` | `lib.const.NOTIFY_TYPE.ERROR` |
+| `info` | `lib.const.NOTIFY_TYPE.INFO` |
+| `warning` | `lib.const.NOTIFY_TYPE.WARNING` |
+
+## Fallback Chain
+
+Notifications cascade through available resources:
+
+1. **meta_ui** — fires `meta_lib:notify` event (if meta_ui is started)
+2. **ox_lib** — uses `exports.ox_lib:notify()` (if ox_lib is started)
+3. **GTA native** — `SetNotificationTextEntry` / `DrawNotification` (always available)
+
+Configure the primary target in `lib.config.notifyResource`.

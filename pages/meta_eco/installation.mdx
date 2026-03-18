@@ -1,0 +1,60 @@
+# Installation
+
+## Requirements
+
+- FiveM server with **OneSync** enabled
+- [oxmysql](https://github.com/overextended/oxmysql)
+- [meta_core](/meta_core)
+
+## Database Setup
+
+Run `meta_eco/sql/init.sql` against your database. This creates:
+
+| Table | Purpose |
+|-------|---------|
+| `meta_accounts` | Personal, business, and society accounts with balances |
+| `meta_transactions` | Immutable transaction log for all balance mutations |
+| `meta_invoices` | Invoice records with status tracking |
+| `meta_business_access` | Member access levels for business/society accounts |
+| `meta_payroll_runs` | Payroll batch execution history |
+| `meta_payroll_entries` | Per-recipient payroll payment records |
+| `meta_payroll_schedules` | Recurring payroll schedule definitions |
+| `meta_loans` | Loan records with repayment tracking |
+| `meta_loan_payments` | Individual loan payment history |
+| `meta_credit_scores` | Per-borrower credit profiles |
+| `meta_credit_events` | Credit score change audit log |
+| `meta_tax_rules` | Configurable tax rate rules |
+
+## Server Config
+
+Add to your `server.cfg`:
+
+```cfg
+ensure oxmysql
+ensure meta_core
+ensure meta_eco
+```
+
+meta_eco must start **after** meta_core.
+
+## Configuration
+
+The `Eco.Config` table in `shared/config.lua` controls runtime behavior:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `Debug` | `false` | Enable debug-level logging |
+| `DefaultPersonalAccounts` | `{'cash','bank','crypto'}` | Account subtypes auto-created per character |
+| `DefaultBalances` | `{cash=500, bank=5000, crypto=0}` | Starting balances for new characters |
+| `MaxTransferAmount` | `1000000000` | Maximum single transfer amount |
+| `InvoiceExpiryDays` | `30` | Days before unpaid invoices expire |
+| `TaxEnabled` | `true` | Enable/disable tax system |
+| `PayrollSchedulerEnabled` | `true` | Enable/disable automatic payroll scheduler |
+| `LoansEnabled` | `true` | Enable/disable loan system |
+| `LoanMaxPerBorrower` | `3` | Base maximum active loans (credit tier overrides) |
+| `LoanDefaultInterestRate` | `0.05` | Base interest rate (credit tier modifies) |
+| `LoanMaxPrincipal` | `10000000` | Base max loan amount (credit tier multiplies) |
+| `CreditEnabled` | `true` | Enable/disable credit scoring |
+| `CreditDefaultScore` | `500` | Starting credit score for new borrowers |
+| `CreditMinScoreForLoan` | `200` | Minimum score to qualify for any loan |
+| `CreditMinPaymentsBeforeNewLoan` | `5` | Required payments on existing loans before a new one |

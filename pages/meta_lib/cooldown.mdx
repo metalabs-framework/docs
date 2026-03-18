@@ -1,0 +1,77 @@
+# Cooldowns
+
+The cooldown module provides server-side rate limiting by player and action. Prevents spam without duplicated anti-abuse logic across resources.
+
+## Usage
+
+#### Cooldown (Set + Check)
+
+The primary export. Checks if on cooldown, and if not, sets one.
+
+```lua
+local allowed, remaining = exports.meta_lib:Cooldown(source, 'atm_withdraw', 5000)
+if not allowed then
+    -- remaining = milliseconds left on cooldown
+    return nil, 'wait ' .. math.ceil(remaining / 1000) .. ' seconds'
+end
+
+-- action is now on cooldown for 5 seconds
+processWithdraw(source)
+```
+
+#### IsOnCooldown
+
+Check without setting.
+
+```lua
+local onCooldown, remaining = exports.meta_lib:IsOnCooldown(source, 'atm_withdraw')
+```
+
+#### ClearCooldown
+
+Remove a specific cooldown.
+
+```lua
+exports.meta_lib:ClearCooldown(source, 'atm_withdraw')
+```
+
+## Scopes
+
+Cooldowns are scoped by `scope:identifier:action`. Default scope is `player`.
+
+```lua
+-- Per-player cooldown
+lib.Cooldown(source, 'heal', 30000, 'player')
+
+-- Global cooldown (same for everyone)
+lib.Cooldown('global', 'server_restart_vote', 300000, 'global')
+
+-- Per-resource cooldown
+lib.Cooldown(source, 'submit', 5000, 'banking')
+```
+
+## Clearing All Cooldowns
+
+Remove all cooldowns for an identifier:
+
+```lua
+lib.cooldown.ClearAll(source, 'player')
+```
+
+## Cleanup
+
+Expired cooldowns are automatically cleaned up every `cooldownCleanupInterval` (default 30s).
+
+## Integration Example
+
+```lua
+-- Prevent rapid-fire shop purchases
+exports.meta_lib:RegisterCallback('shop:buy', function(source, payload)
+    local allowed = exports.meta_lib:Cooldown(source, 'shop_buy', 2000)
+    if not allowed then
+        return nil, 'too fast, slow down'
+    end
+
+    return processPurchase(source, payload)
+end)
+```

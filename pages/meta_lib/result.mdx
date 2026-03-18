@@ -1,0 +1,83 @@
+# Result Pattern
+
+The result module standardizes success/error responses across the ecosystem. Instead of returning mixed tuples, functions return structured result tables.
+
+## Creating Results
+
+#### Ok
+
+```lua
+local result = exports.meta_lib:Ok({ balance = 500 }, 'deposit successful')
+-- { ok = true, data = { balance = 500 }, message = 'deposit successful' }
+```
+
+#### Err
+
+```lua
+local result = exports.meta_lib:Err('insufficient_funds', 'Not enough money', { required = 500, available = 200 })
+-- { ok = false, code = 'insufficient_funds', message = 'Not enough money', details = { required = 500, available = 200 } }
+```
+
+## Checking Results
+
+#### IsOk
+
+```lua
+local result = someOperation()
+if exports.meta_lib:IsOk(result) then
+    print('Success:', result.data)
+else
+    print('Error:', result.code, result.message)
+end
+```
+
+## Unwrapping
+
+```lua
+local data, code, message = lib.result.Unwrap(result)
+if data then
+    -- success path
+else
+    -- error path: code and message available
+end
+```
+
+## Error Codes
+
+`lib.errors` provides standard error codes:
+
+| Code | Constant |
+|------|----------|
+| `unknown` | `lib.errors.UNKNOWN` |
+| `invalid_input` | `lib.errors.INVALID_INPUT` |
+| `not_found` | `lib.errors.NOT_FOUND` |
+| `not_authorized` | `lib.errors.NOT_AUTHORIZED` |
+| `forbidden` | `lib.errors.FORBIDDEN` |
+| `timeout` | `lib.errors.TIMEOUT` |
+| `rate_limited` | `lib.errors.RATE_LIMITED` |
+| `validation_error` | `lib.errors.VALIDATION` |
+| `insufficient` | `lib.errors.INSUFFICIENT` |
+| `frozen` | `lib.errors.FROZEN` |
+| `expired` | `lib.errors.EXPIRED` |
+| `duplicate` | `lib.errors.DUPLICATE` |
+| `cancelled` | `lib.errors.CANCELLED` |
+| `internal_error` | `lib.errors.INTERNAL` |
+
+## Usage Pattern
+
+```lua
+-- In a server callback
+lib.RegisterCallback('shop:buy', function(source, payload)
+    local item = getItem(payload.itemId)
+    if not item then
+        return lib.Err(lib.errors.NOT_FOUND, 'Item not found')
+    end
+
+    local bought = processTransaction(source, item)
+    if not bought then
+        return lib.Err(lib.errors.INSUFFICIENT, 'Cannot afford this item')
+    end
+
+    return lib.Ok({ item = item.name, quantity = 1 })
+end)
+```

@@ -1,0 +1,160 @@
+# Client Cache
+
+The cache module provides two systems:
+
+1. **Runtime cache** — auto-updating player and vehicle state with change callbacks (ox_lib-style)
+2. **TTL store** — general purpose key/value cache with expiration
+
+## Runtime Cache
+
+Direct property access for player and vehicle state. Values update automatically via native polling (or meta_logic events when available).
+
+### Player State
+
+```lua
+cache.ped         -- current ped entity ID
+cache.playerId    -- client player ID
+cache.serverId    -- server ID
+cache.coords      -- vec3 position
+cache.heading     -- heading float
+cache.vehicle     -- vehicle entity or false
+cache.seat        -- seat index or false (-1 = driver, 0 = passenger)
+cache.weapon      -- weapon hash or false
+cache.isDead      -- boolean
+```
+
+### Vehicle State
+
+Updated while in a vehicle. Static data (model/plate/class) is captured on enter. Dynamic data (speed/rpm/fuel) polls every 100ms.
+
+```lua
+cache.model        -- vehicle model hash or false
+cache.plate        -- plate text or false
+cache.class        -- vehicle class int or false
+cache.netId        -- network ID or false
+cache.speed        -- m/s float
+cache.rpm          -- 0.0–1.0 float
+cache.gear         -- current gear int
+cache.fuel         -- fuel level float
+cache.engine       -- engine running boolean
+cache.locked       -- doors locked boolean
+cache.body         -- body health float
+cache.engineHealth -- engine health float
+```
+
+All vehicle values reset to `0`/`false` when exiting a vehicle.
+
+### Change Callbacks
+
+React to state changes without polling:
+
+```lua
+lib.onCache('vehicle', function(vehicle, oldVehicle)
+    if vehicle then
+        print('Entered vehicle:', vehicle)
+    else
+        print('Exited vehicle')
+    end
+end)
+
+lib.onCache('weapon', function(weapon, oldWeapon)
+    if weapon then
+        print('Equipped:', weapon)
+    else
+        print('Holstered weapon')
+    end
+end)
+
+lib.onCache('isDead', function(dead)
+    if dead then print('Player died') end
+end)
+
+lib.onCache('seat', function(seat, oldSeat)
+    if seat == -1 then print('Now driving') end
+end)
+
+-- Vehicle-specific changes fire too
+lib.onCache('speed', function(speed)
+    if speed > 50.0 then print('Going fast!') end
+end)
+```
+
+### Supported Callback Keys
+
+| Key | Fires When |
+|-----|------------|
+| `ped` | Ped entity changes (respawn, model change) |
+| `vehicle` | Enter/exit vehicle |
+| `seat` | Seat changes |
+| `weapon` | Equip/holster weapon |
+| `coords` | Position changes |
+| `isDead` | Death/respawn |
+| `model` | Enter different vehicle model |
+| `speed`, `rpm`, `gear`, `fuel` | Vehicle dynamic state changes |
+| `engine`, `locked` | Vehicle toggle state changes |
+
+### meta_logic Integration
+
+When meta_logic is running, the runtime cache listens to `meta_logic:client:localStateChanged` events instead of polling natives directly. This avoids duplicate native calls. When meta_logic is not available, meta_lib polls natives itself at 200ms intervals.
+
+---
+
+## TTL Store
+
+General purpose key/value cache with optional expiration.
+
+#### CacheSet
+
+Store a value with optional TTL (seconds).
+
+```lua
+exports.meta_lib:CacheSet('player_job', jobData, 60)   -- expires in 60s
+exports.meta_lib:CacheSet('settings', prefs)            -- no expiry
+```
+
+#### CacheGet
+
+Retrieve a value. Returns `nil` if not found or expired.
+
+```lua
+local job = exports.meta_lib:CacheGet('player_job')
+```
+
+#### CacheClear
+
+Flush all cached entries.
+
+```lua
+exports.meta_lib:CacheClear()
+```
+
+## Additional Methods
+
+These are available through `lib.cache` (not exported):
+
+```lua
+lib.cache.Has('player_job')              -- true/false
+lib.cache.Remove('player_job')           -- remove specific key
+
+-- Fetch-on-miss pattern
+local items = lib.cache.GetOrSet('shop_items', function()
+    return lib.request.ServerAsync('shop:getItems', {})
+end, 120)  -- cache result for 120s
+```
+
+## Cleanup
+
+A background thread runs every 10 seconds and removes expired entries. No manual cleanup needed.
+
+## Use Cases
+
+- Cache server responses to avoid repeated network requests
+- Store computed UI data between frame renders
+- Hold temporary interaction state
+- Buffer recently-fetched player data
+
+## Notes
+
+- Cache is **client-side only** and **in-memory** — it does not survive resource restarts
+- Do not cache sensitive data that shouldn't persist across sessions
+- For server-side caching, use module-level tables with your own invalidation

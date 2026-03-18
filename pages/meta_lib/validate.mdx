@@ -1,0 +1,91 @@
+# Validation
+
+The validate module provides schema-based payload validation and type checking utilities.
+
+## Payload Validation
+
+#### ValidatePayload
+
+Validates a data table against a schema. Returns a [result](/meta_lib/result).
+
+```lua
+local schema = {
+    name     = { type = 'string', required = true, minLength = 2, maxLength = 50 },
+    age      = { type = 'number', required = true, min = 18, max = 120, integer = true },
+    email    = { type = 'string', pattern = '^[%w%.]+@[%w%.]+%.[%w]+$' },
+    role     = { type = 'string', enum = { 'user', 'admin', 'moderator' } },
+    active   = { type = 'boolean', default = true },
+    position = { type = 'vector3' },
+}
+
+local result = exports.meta_lib:ValidatePayload(data, schema)
+if lib.IsOk(result) then
+    local clean = result.data  -- sanitized values
+else
+    -- result.details = { 'name is required', 'age must be at least 18' }
+end
+```
+
+## Schema Options
+
+| Option | Types | Description |
+|--------|-------|-------------|
+| `type` | All | Expected type (`string`, `number`, `boolean`, `table`, `vector3`, `integer`) |
+| `required` | All | Field must be present |
+| `default` | All | Default value when field is nil |
+| `min` / `max` | Number | Value range |
+| `integer` | Number | Must be a whole number |
+| `minLength` / `maxLength` | String | Character count range |
+| `pattern` | String | Lua pattern match |
+| `enum` | String | Must be one of the listed values |
+| `custom` | All | Custom validator function `fn(value, data) -> bool, errMsg` |
+
+Strings are automatically trimmed and null bytes are stripped.
+
+## Custom Validators
+
+```lua
+local schema = {
+    password = {
+        type = 'string',
+        required = true,
+        custom = function(value, data)
+            if #value < 8 then
+                return false, 'must be at least 8 characters'
+            end
+            if not value:match('%d') then
+                return false, 'must contain a number'
+            end
+            return true
+        end,
+    },
+}
+```
+
+## Type Checkers
+
+For inline type checking without a full schema:
+
+```lua
+lib.validate.isString(value)   -- type == 'string'
+lib.validate.isNumber(value)   -- type == 'number', not NaN, not Infinity
+lib.validate.isInteger(value)  -- isNumber + whole number
+lib.validate.isBoolean(value)  -- type == 'boolean'
+lib.validate.isTable(value)    -- type == 'table'
+lib.validate.isVector3(value)  -- native vector3 or {x, y, z} table
+lib.validate.isEmpty(value)    -- nil, empty string, or empty table
+```
+
+## Validated Routes
+
+On the server, combine validation with route registration:
+
+```lua
+lib.request.RegisterValidatedRoute('shop:buy', {
+    itemId   = { type = 'string', required = true },
+    quantity = { type = 'number', required = true, min = 1, integer = true },
+}, function(source, data)
+    -- data is already validated and sanitized
+    return buyItem(source, data.itemId, data.quantity)
+end)
+```
