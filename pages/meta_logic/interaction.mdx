@@ -7,37 +7,37 @@ The interaction module provides thin abstractions over popular interaction libra
 ### Entity Target
 
 ```lua
-ml.Interaction.AddEntityTarget(entity, options)
-ml.Interaction.RemoveEntityTarget(entity)
+meta.Interaction.AddEntityTarget(entity, options)
+meta.Interaction.RemoveEntityTarget(entity)
 ```
 
 ### Model Target
 
 ```lua
-ml.Interaction.AddModelTarget(model, options)
-ml.Interaction.RemoveModelTarget(model)
+meta.Interaction.AddModelTarget(model, options)
+meta.Interaction.RemoveModelTarget(model)
 ```
 
 ### Zone Target
 
 ```lua
-ml.Interaction.AddZoneTarget(name, data)
-ml.Interaction.RemoveZoneTarget(name)
+meta.Interaction.AddZoneTarget(name, data)
+meta.Interaction.RemoveZoneTarget(name)
 ```
 
 ## Context Menu (ox_lib)
 
 ```lua
-ml.Interaction.OpenContext(data)
-ml.Interaction.CloseContext()
+meta.Interaction.OpenContext(data)
+meta.Interaction.CloseContext()
 ```
 
 ## Radial Menu (ox_lib)
 
 ```lua
-ml.Interaction.AddRadialItem(data)
-ml.Interaction.RemoveRadialItem(id)
-ml.Interaction.ClearRadialItems()
+meta.Interaction.AddRadialItem(data)
+meta.Interaction.RemoveRadialItem(id)
+meta.Interaction.ClearRadialItems()
 ```
 
 ## Server-Side Access Checks
@@ -46,10 +46,10 @@ Two built-in network routes allow clients to verify permissions before showing i
 
 ```lua
 -- Check ACE permission
-local allowed, err = ml.Network.RequestAsync('interaction:checkAccess', { node = 'meta.admin' })
+local allowed, err = meta.Network.RequestAsync('interaction:checkAccess', { node = 'meta.admin' })
 
 -- Check job requirement
-local hasJob, err = ml.Network.RequestAsync('interaction:checkJob', { name = 'police', minGrade = 2 })
+local hasJob, err = meta.Network.RequestAsync('interaction:checkJob', { name = 'police', minGrade = 2 })
 ```
 
 These are useful for conditionally showing interaction options based on server-validated permissions, without trusting the client cache.

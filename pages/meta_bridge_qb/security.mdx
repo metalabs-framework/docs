@@ -8,7 +8,7 @@ meta_bridge_qb bridges the **API shape**, not the **trust model**. Legacy QB scr
 
 ### No Client Trust
 
-All client bridge files are treated as public. Nothing sensitive is stored client-side. Client requests always go through ml.Network, which validates the source server-side.
+All client bridge files are treated as public. Nothing sensitive is stored client-side. Client requests always go through meta.Network, which validates the source server-side.
 
 ### No Direct Money Manipulation
 
@@ -20,7 +20,7 @@ All client bridge files are treated as public. Nothing sensitive is stored clien
 
 ### No Generic Net Events
 
-The bridge does **not** register any `RegisterNetEvent` handlers. All client-server communication uses ml.Network's route system, which validates the source on every request.
+The bridge does **not** register any `RegisterNetEvent` handlers. All client-server communication uses meta.Network's route system, which validates the source on every request.
 
 ### No Permission Escalation
 
@@ -34,7 +34,7 @@ These QB patterns are **not** replicated because they are inherently insecure:
 |-----------|-----------------|
 | Client-triggered money changes | Economy must be server-authoritative |
 | Client-triggered inventory changes | Inventory must be server-authoritative |
-| `TriggerServerEvent` for trusted operations | Use exports or ml.Network routes instead |
+| `TriggerServerEvent` for trusted operations | Use exports or meta.Network routes instead |
 | Global shared data mutation from any resource | Data management should be centralized |
 
 ## Resource Isolation
@@ -43,4 +43,4 @@ The `provide 'qb-core'` directive prevents the real qb-core from loading alongsi
 
 ## Callback Security
 
-QB callbacks registered via `CreateCallback` are internally ml.Network routes prefixed with `qb:`. They inherit ml.Network's source validation. The handler always receives the validated `source` as the first argument.
+QB callbacks registered via `CreateCallback` are internally meta.Network routes prefixed with `qb:`. They inherit meta.Network's source validation. The handler always receives the validated `source` as the first argument.

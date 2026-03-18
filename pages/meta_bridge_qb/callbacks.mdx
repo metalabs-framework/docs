@@ -24,20 +24,20 @@ QBCore.Functions.CreateCallback('police:getPlayers', function(source, cb, arg1, 
 end)
 ```
 
-Internally this registers an ml.Network route at `qb:police:getPlayers`. The QB `cb()` pattern is adapted to the route's return-value pattern using promises.
+Internally this registers an meta.Network route at `qb:police:getPlayers`. The QB `cb()` pattern is adapted to the route's return-value pattern using promises.
 
 ## How It Works
 
 1. Client calls `TriggerCallback('name', cb, args...)`
-2. Bridge sends `ml.Network.Request('qb:name', {args={...}}, cb)`
+2. Bridge sends `meta.Network.Request('qb:name', {args={...}}, cb)`
 3. Server route `qb:name` was registered by `CreateCallback`
 4. Bridge adapter calls the QB handler with `(source, resolveFn, args...)`
 5. Handler calls `resolveFn(result)` — promise resolves
-6. ml.Network sends response back to client
+6. meta.Network sends response back to client
 7. Client callback fires with result
 
 This works for both synchronous and asynchronous handler patterns (e.g., handlers that do database queries before calling `cb`).
 
 ## Callback Prefix
 
-All QB callbacks are prefixed with `qb:` in the ml.Network route system to avoid name collisions with Meta-native routes. This is configurable via `BridgeConfig.CallbackPrefix`.
+All QB callbacks are prefixed with `qb:` in the meta.Network route system to avoid name collisions with Meta-native routes. This is configurable via `BridgeConfig.CallbackPrefix`.

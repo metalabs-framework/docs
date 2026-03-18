@@ -16,7 +16,7 @@ Only **two** net events are used for all communication: `NET_REQUEST` and `NET_R
 ### Callback Style
 
 ```lua
-ml.Network.Request('player:getCharacter', {}, function(data, err)
+meta.Network.Request('player:getCharacter', {}, function(data, err)
     if err then
         print('Error:', err)
         return
@@ -30,7 +30,7 @@ end)
 Uses `promise` + `Citizen.Await` for synchronous-looking code in coroutine context.
 
 ```lua
-local data, err = ml.Network.RequestAsync('player:getCharacter', {})
+local data, err = meta.Network.RequestAsync('player:getCharacter', {})
 if err then
     print('Error:', err)
     return
@@ -75,8 +75,8 @@ meta_logic registers these routes internally:
 
 | Route | Description |
 |-------|-------------|
-| `player:getSession` | Get the caller's session |
-| `player:getCharacter` | Get the caller's character |
+| `player:getAcct` | Get the caller's account data |
+| `player:getChar` | Get the caller's character |
 | `player:hasPermission` | Check an ACE permission node |
 | `player:isAdmin` | Check admin status |
 | `player:hasJob` | Check job + optional grade |
@@ -87,4 +87,4 @@ meta_logic registers these routes internally:
 
 ## Timeout Handling
 
-Requests that don't receive a response within `ml.Config.CacheRequestTimeout` (default 10s) are automatically cleaned up. A background thread sweeps pending requests every 5 seconds.
+Requests that don't receive a response within `meta.Config.CacheRequestTimeout` (default 10s) are automatically cleaned up. A background thread sweeps pending requests every 5 seconds.

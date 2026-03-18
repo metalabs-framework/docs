@@ -37,7 +37,7 @@ All cached data is **read-only** on the client. Changes must go through meta_cor
 
 ## Player Tracking
 
-A client-side thread runs every `ml.Config.TrackingInterval` ms (default 200) and updates:
+A client-side thread runs every `meta.Config.TrackingInterval` ms (default 200) and updates:
 
 | Key | Description |
 |-----|-------------|
@@ -59,21 +59,21 @@ local inVehicle = exports.meta_logic:IsInVehicle()
 local vehicle = exports.meta_logic:GetCurrentVehicle()
 ```
 
-Or through `ml.Player` directly:
+Or through `meta.self` directly:
 
 ```lua
-ml.Player.GetPed()
-ml.Player.GetCoords()
-ml.Player.GetHeading()
-ml.Player.IsInVehicle()
-ml.Player.GetCurrentVehicle()
-ml.Player.GetVehicleSeat()
-ml.Player.GetCurrentWeapon()
-ml.Player.IsArmed()
-ml.Player.IsDead()
-ml.Player.IsHandcuffed()
-ml.Player.IsLastStand()
-ml.Player.IsDowned()
+meta.self.GetPed()
+meta.self.GetCoords()
+meta.self.GetHeading()
+meta.self.IsInVehicle()
+meta.self.GetCurrentVehicle()
+meta.self.GetVehicleSeat()
+meta.self.GetCurrentWeapon()
+meta.self.IsArmed()
+meta.self.IsDead()
+meta.self.IsHandcuffed()
+meta.self.IsLastStand()
+meta.self.IsDowned()
 ```
 
 ## Client Events
@@ -88,21 +88,21 @@ ml.Player.IsDowned()
 
 ## Server Bridge
 
-On the server side, `ml.Player` provides pass-through functions to meta_core:
+On the server side, `meta.Player` provides pass-through functions to meta_core:
 
 ```lua
-ml.Player.GetAcct(source)
-ml.Player.GetChar(source)
-ml.Player.HasPermission(source, node)
-ml.Player.HasRole(source, role)
-ml.Player.HasJob(source, name, minGrade)
-ml.Player.HasGang(source, name, minGrade)
-ml.Player.IsAdmin(source)
-ml.Player.UpdateJob(source, jobData)
-ml.Player.UpdateGang(source, gangData)
-ml.Player.GetState(source, key)
-ml.Player.SetState(source, key, value)
-ml.Player.GetStateBag(source)
+meta.Player.GetAcct(source)
+meta.Player.GetChar(source)
+meta.Player.HasPermission(source, node)
+meta.Player.HasRole(source, role)
+meta.Player.HasJob(source, name, minGrade)
+meta.Player.HasGang(source, name, minGrade)
+meta.Player.IsAdmin(source)
+meta.Player.UpdateJob(source, jobData)
+meta.Player.UpdateGang(source, gangData)
+meta.Player.GetState(source, key)
+meta.Player.SetState(source, key, value)
+meta.Player.GetStateBag(source)
 ```
 
 ## Resource Restart Handling
