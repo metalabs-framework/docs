@@ -1,0 +1,189 @@
+# Player API
+
+The `meta.player` namespace is the single entry point for all player operations. It splits player data into two clear layers:
+
+- **Character** (`getChar`) — the RP character they're playing (firstname, job, gang, cash)
+- **Account** (`getAcct`) — the real player behind the screen (license, identifier, permissions)
+
+## Character Data
+
+```lua
+meta.player.getChar(source)              -- full character table
+meta.player.getChar(source, 'firstname') -- single field
+```
+
+A character table looks like:
+
+```lua
+{
+    id          = 1,
+    slot        = 1,
+    firstname   = 'John',
+    lastname    = 'Doe',
+    fullname    = 'John Doe',
+    dateofbirth = '1990-01-15',
+    sex         = 'male',
+    nationality = 'American',
+    job = {
+        name = 'police',
+        label = 'Police',
+        grade = 3,
+        gradeLabel = 'Sergeant',
+    },
+    gang = {
+        name = 'none',
+        label = 'None',
+        grade = 0,
+    },
+    cash   = 5000,
+    bank   = 25000,
+    crypto = 0,
+}
+```
+
+## Account Data
+
+```lua
+meta.player.getAcct(source)              -- full account table
+meta.player.getAcct(source, 'license')   -- single field
+```
+
+An account table looks like:
+
+```lua
+{
+    license     = 'license:abc123',
+    identifier  = 'license:abc123',
+    name        = 'PlayerName',
+    permissions = { roles = {}, adminLevel = 0 },
+    metadata    = {},
+    connectedAt = 1710000000,
+}
+```
+
+## Exports
+
+### Character Exports
+
+#### PlayerGetChar
+
+Get character data, or a single field.
+
+```lua
+local char = exports.meta_core:PlayerGetChar(source)
+local name = exports.meta_core:PlayerGetChar(source, 'firstname')
+```
+
+#### PlayerSetChar
+
+Set a character field. Special handling for `job` and `gang` (fires events).
+
+```lua
+exports.meta_core:PlayerSetChar(source, 'job', {
+    name = 'mechanic',
+    label = 'Mechanic',
+    grade = 1,
+})
+```
+
+#### PlayerCharId
+
+Get the character's database ID.
+
+```lua
+local id = exports.meta_core:PlayerCharId(source)
+```
+
+### Account Exports
+
+#### PlayerGetAcct
+
+Get account data, or a single field.
+
+```lua
+local acct = exports.meta_core:PlayerGetAcct(source)
+local license = exports.meta_core:PlayerGetAcct(source, 'license')
+```
+
+#### PlayerAcctId
+
+Get the player's unique identifier.
+
+```lua
+local id = exports.meta_core:PlayerAcctId(source)
+```
+
+### Query Exports
+
+#### PlayerExists
+
+Check if a player has an active connection.
+
+```lua
+local exists = exports.meta_core:PlayerExists(source)
+```
+
+#### PlayerCount
+
+Get the number of connected players.
+
+```lua
+local count = exports.meta_core:PlayerCount()
+```
+
+#### PlayerGetAll
+
+Get all connected players.
+
+```lua
+local players = exports.meta_core:PlayerGetAll()
+for src, data in pairs(players) do
+    print(data.acct.name, data.char and data.char.firstname or 'no character')
+end
+```
+
+#### PlayerFindByAcctId
+
+Find a player's source by their account identifier.
+
+```lua
+local source = exports.meta_core:PlayerFindByAcctId('license:abc123')
+```
+
+#### PlayerFindWithJob / PlayerFindWithGang
+
+Find all players with a specific job or gang.
+
+```lua
+local sources = exports.meta_core:PlayerFindWithJob('police', 2)
+local sources = exports.meta_core:PlayerFindWithGang('ballas')
+```
+
+#### PlayerIsLoaded
+
+Check if a player has an active character loaded.
+
+```lua
+local loaded = exports.meta_core:PlayerIsLoaded(source)
+```
+
+### Lifecycle Exports
+
+#### PlayerConnect
+
+Create a player connection. Called by the bridge layer when a player connects.
+
+```lua
+local success = exports.meta_core:PlayerConnect(source, {
+    identifier = 'license:abc123',
+    name = 'PlayerName',
+})
+```
+
+#### PlayerDisconnect
+
+Destroy a player connection. Persists state and character to database.
+
+```lua
+exports.meta_core:PlayerDisconnect(source)
+```

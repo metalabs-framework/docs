@@ -4,38 +4,60 @@ The state module provides per-player key/value storage that persists to MySQL. S
 
 ## How It Works
 
-- State is loaded from the database when a session is created
+- State is loaded from the database when a player connects
 - Changes are tracked with a dirty flag
 - A background thread persists dirty state every `StateSaveInterval` seconds (default 300)
-- State is also persisted when a session is destroyed or the resource stops
+- State is also persisted when a player disconnects or the resource stops
 - State changes fire the `stateChanged` event
 
 ## Exports
 
-### GetState
+### PlayerGetState
 
-Get a single state value by key.
+Get a single state value by key, or the full state table.
 
 ```lua
-local isDead = exports.meta_core:GetState(source, 'isDead')
+local isDead = exports.meta_core:PlayerGetState(source, 'isDead')
+local allState = exports.meta_core:PlayerGetState(source)
 ```
 
-### SetState
+### PlayerSetState
 
 Set a state value. Fires the `stateChanged` event with old and new values.
 
 ```lua
-exports.meta_core:SetState(source, 'isDead', true)
-exports.meta_core:SetState(source, 'money', 5000)
+exports.meta_core:PlayerSetState(source, 'isDead', true)
+exports.meta_core:PlayerSetState(source, 'money', 5000)
 ```
 
-### GetStateBag
+### PlayerSetStates
 
-Get the entire state bag (all key/value pairs) for a player.
+Set multiple state values at once. Fires the `stateBatchChanged` event.
 
 ```lua
-local state = exports.meta_core:GetStateBag(source)
--- state = { isDead = false, money = 5000, ... }
+exports.meta_core:PlayerSetStates(source, {
+    isDead = false,
+    armor = 100,
+})
+```
+
+### PlayerRemoveState
+
+Remove a state key.
+
+```lua
+exports.meta_core:PlayerRemoveState(source, 'isDead')
+```
+
+## Using meta.player directly
+
+If your resource runs inside meta_core (or has access to the global):
+
+```lua
+meta.player.getState(source, 'isDead')
+meta.player.setState(source, 'isDead', true)
+meta.player.setStates(source, { isDead = false, armor = 100 })
+meta.player.removeState(source, 'isDead')
 ```
 
 ## Storage

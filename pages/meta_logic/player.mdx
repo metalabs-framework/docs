@@ -6,7 +6,7 @@ The player module handles the client-side cache of player data and continuous tr
 
 When a player loads in, meta_logic server pushes a full sync of their data to the client:
 
-- Session info (source, license, name)
+- Account info (source, license, name)
 - Character data (name, dob, sex)
 - Job and gang
 - Permissions
@@ -18,7 +18,7 @@ After the initial sync, changes are pushed as **patches** — only the changed f
 
 ```lua
 local data = exports.meta_logic:GetPlayerData()
--- { session = {...}, character = {...}, job = {...}, gang = {...}, permissions = {...}, state = {...} }
+-- { acct = {...}, character = {...}, job = {...}, gang = {...}, permissions = {...}, state = {...} }
 
 local character = exports.meta_logic:GetCharacter()
 -- { firstname = 'John', lastname = 'Doe', fullname = 'John Doe', ... }
@@ -81,7 +81,7 @@ ml.Player.IsDowned()
 | Event | Fired When |
 |-------|------------|
 | `meta_logic:client:playerLoaded` | Full cache sync received |
-| `meta_logic:client:playerUnloaded` | Player session destroyed |
+| `meta_logic:client:playerUnloaded` | Player disconnected |
 | `meta_logic:client:jobUpdated` | Job changed |
 | `meta_logic:client:gangUpdated` | Gang changed |
 | `meta_logic:client:stateChanged` | Server state value changed |
@@ -91,8 +91,8 @@ ml.Player.IsDowned()
 On the server side, `ml.Player` provides pass-through functions to meta_core:
 
 ```lua
-ml.Player.GetSession(source)
-ml.Player.GetActiveCharacter(source)
+ml.Player.GetAcct(source)
+ml.Player.GetChar(source)
 ml.Player.HasPermission(source, node)
 ml.Player.HasRole(source, role)
 ml.Player.HasJob(source, name, minGrade)

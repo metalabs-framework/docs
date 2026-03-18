@@ -29,45 +29,62 @@ add_principal identifier.fivem:12345 group.admin
 
 ## Exports
 
-### HasPermission
+### PlayerHasPermission
 
 Check if a player has a specific ACE permission node.
 
 ```lua
-local allowed = exports.meta_core:HasPermission(source, 'meta.admin')
+local allowed = exports.meta_core:PlayerHasPermission(source, 'meta.admin')
 ```
 
-### HasRole
+### PlayerHasRole
 
-Check if a player has a specific role in their session.
+Check if a player has a specific role.
 
 ```lua
-local isMod = exports.meta_core:HasRole(source, 'meta.moderator')
+local isMod = exports.meta_core:PlayerHasRole(source, 'meta.moderator')
 ```
 
-### HasJob
+### PlayerHasJob
 
 Check if a player has a specific job, optionally with a minimum grade.
 
 ```lua
-local isPolice = exports.meta_core:HasJob(source, 'police')
-local isSgt = exports.meta_core:HasJob(source, 'police', 3)
+local isPolice = exports.meta_core:PlayerHasJob(source, 'police')
+local isSgt = exports.meta_core:PlayerHasJob(source, 'police', 3)
 ```
 
-### HasGang
+### PlayerHasGang
 
 Check if a player is in a specific gang, optionally with a minimum grade.
 
 ```lua
-local isBalla = exports.meta_core:HasGang(source, 'ballas')
-local isOG = exports.meta_core:HasGang(source, 'ballas', 3)
+local isBalla = exports.meta_core:PlayerHasGang(source, 'ballas')
+local isOG = exports.meta_core:PlayerHasGang(source, 'ballas', 3)
 ```
 
-### IsAdmin
+### PlayerIsAdmin
 
 Check if a player meets a minimum admin level. Defaults to `MODERATOR` (1) if no level specified.
 
 ```lua
-local isAdmin = exports.meta_core:IsAdmin(source)
-local isSuperAdmin = exports.meta_core:IsAdmin(source, 3)
+local isAdmin = exports.meta_core:PlayerIsAdmin(source)
+local isSuperAdmin = exports.meta_core:PlayerIsAdmin(source, 3)
+```
+
+### PlayerAdminLevel
+
+Get the player's admin level as a number.
+
+```lua
+local level = exports.meta_core:PlayerAdminLevel(source)
+```
+
+## Using meta.player directly
+
+```lua
+meta.player.hasPermission(source, 'meta.admin')
+meta.player.hasJob(source, 'police', 3)
+meta.player.isAdmin(source)
+meta.player.adminLevel(source)
 ```

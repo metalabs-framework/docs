@@ -1,10 +1,10 @@
 # Characters
 
-The characters module provides full character persistence with multicharacter support. Characters are stored in the `meta_characters` MySQL table and linked to a player's identifier.
+The characters module provides full character persistence with multicharacter support. Characters are stored in the `meta_characters` MySQL table and linked to a player's account identifier.
 
 ## Multicharacter
 
-Each player can have up to `Meta.Config.MaxCharacters` characters (default 5). Characters are assigned to numbered slots (1–5). When a character is deleted, its slot becomes available for reuse.
+Each player can have up to `Meta.Config.MaxCharacters` characters (default 5). Characters are assigned to numbered slots (1-5). When a character is deleted, its slot becomes available for reuse.
 
 ## Character Object
 
@@ -33,12 +33,12 @@ When loaded from the database, a character looks like:
 
 ## Exports
 
-### CreateCharacter
+### PlayerCharCreate
 
 Creates a new character and inserts it into the database. Automatically assigns the next available slot.
 
 ```lua
-local character, err = exports.meta_core:CreateCharacter(source, {
+local character, err = exports.meta_core:PlayerCharCreate(source, {
     firstname   = 'John',
     lastname    = 'Doe',
     dateofbirth = '1990-01-15',
@@ -59,23 +59,23 @@ end
 
 **Returns:** Character table with `id` and `slot`, or `nil` + error string.
 
-### DeleteCharacter
+### PlayerCharDelete
 
 Deletes a character from the database. Validates that the player owns the character. If the character is currently active, it is cleared first.
 
 ```lua
-local success, err = exports.meta_core:DeleteCharacter(source, charId)
+local success, err = exports.meta_core:PlayerCharDelete(source, charId)
 if not success then
     print('Error:', err) -- 'character not found', 'not your character'
 end
 ```
 
-### GetCharacters
+### PlayerCharList
 
 Returns all characters for a player, ordered by slot.
 
 ```lua
-local characters, err = exports.meta_core:GetCharacters(source)
+local characters, err = exports.meta_core:PlayerCharList(source)
 if characters then
     for _, char in ipairs(characters) do
         print(char.slot, char.fullname, char.lastPlayed)
@@ -83,49 +83,51 @@ if characters then
 end
 ```
 
-### SelectCharacter
+### PlayerCharSelect
 
 Loads a character from the database and sets it as the active character. If another character is currently active, it is saved to the database first.
 
-Internally calls `SetActiveCharacter`, which handles the `onPlayerLoaded` event on first load.
+Internally triggers the `playerLoaded` event on first load.
 
 ```lua
-local character, err = exports.meta_core:SelectCharacter(source, charId)
+local character, err = exports.meta_core:PlayerCharSelect(source, charId)
 if not character then
     print('Error:', err) -- 'character not found or not yours'
 end
 ```
 
-### SaveCharacter
+### PlayerCharSave
 
-Persists the current active character's mutable fields (job, gang, cash, bank, crypto) back to the database. Called automatically when a session is destroyed.
+Persists the current active character's mutable fields (job, gang, cash, bank, crypto) back to the database. Called automatically when a player disconnects.
 
 ```lua
-exports.meta_core:SaveCharacter(source)
+exports.meta_core:PlayerCharSave(source)
 ```
 
 ## Typical Flow
 
 ```lua
--- 1. Player connects, session created
+-- 1. Player connects
+exports.meta_core:PlayerConnect(source)
+
 -- 2. Show character selection screen
-local characters = exports.meta_core:GetCharacters(source)
+local characters = exports.meta_core:PlayerCharList(source)
 
 -- 3a. Player creates a new character
-local newChar = exports.meta_core:CreateCharacter(source, { firstname = 'Jane', lastname = 'Smith', ... })
+local newChar = exports.meta_core:PlayerCharCreate(source, { firstname = 'Jane', lastname = 'Smith', ... })
 
 -- 3b. Player selects an existing character
-local char = exports.meta_core:SelectCharacter(source, characters[1].id)
+local char = exports.meta_core:PlayerCharSelect(source, characters[1].id)
 
 -- 4. Player plays, job/gang/money changes happen in-memory
 
--- 5. Player disconnects — SaveCharacter is called automatically
+-- 5. Player disconnects — character is saved automatically
 ```
 
 ## Auto-Save
 
 Characters are automatically saved when:
-- A player disconnects (DestroySession calls SaveCharacter)
-- A player switches characters (SelectCharacter saves the previous one)
+- A player disconnects (`PlayerDisconnect` calls save internally)
+- A player switches characters (`PlayerCharSelect` saves the previous one)
 
-You can also call `SaveCharacter` manually at any time for additional safety.
+You can also call `PlayerCharSave` manually at any time for additional safety.

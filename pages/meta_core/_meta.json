@@ -1,9 +1,8 @@
 {
   "index": "Overview",
   "installation": "Installation",
-  "sessions": "Sessions",
+  "player": "Player API",
   "characters": "Characters",
-  "identity": "Identity",
   "permissions": "Permissions",
   "state": "State",
   "validation": "Validation",

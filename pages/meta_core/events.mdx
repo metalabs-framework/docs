@@ -14,108 +14,126 @@ end)
 
 ## Player Lifecycle
 
-### onPlayerLoaded
+### playerLoaded
 
-Fired when a player's character is set for the first time via `SetActiveCharacter`. This is the canonical "player fully loaded" event.
+Fired when a player's character is set for the first time. This is the canonical "player fully loaded" event.
 
 ```lua
-AddEventHandler('meta_core:server:onPlayerLoaded', function(source, session, character)
+AddEventHandler('meta_core:server:playerLoaded', function(source, acct, character)
     print(character.fullname, 'has loaded')
 end)
 ```
 
-### onPlayerUnload
+### playerUnloading
 
-Fired when a loaded player's session is being destroyed (before cleanup).
+Fired when a loaded player is being disconnected (before cleanup).
 
 ```lua
-AddEventHandler('meta_core:server:onPlayerUnload', function(source)
+AddEventHandler('meta_core:server:playerUnloading', function(source)
     print('Player', source, 'is unloading')
 end)
 ```
 
-## Session Lifecycle
+### playerConnected
 
-### sessionCreated
-
-Fired immediately after a new session is created.
+Fired immediately after a new player connection is created.
 
 ```lua
-AddEventHandler('meta_core:server:sessionCreated', function(source, session)
-    print(session.name, 'connected')
+AddEventHandler('meta_core:server:playerConnected', function(source, acct)
+    print(acct.name, 'connected')
 end)
 ```
 
-### sessionDestroying
+### playerDisconnecting
 
-Fired before a session is removed. State is still accessible at this point.
+Fired before a player connection is removed. Data is still accessible at this point.
 
 ```lua
-AddEventHandler('meta_core:server:sessionDestroying', function(source)
-    -- Last chance to read session data
+AddEventHandler('meta_core:server:playerDisconnecting', function(source)
+    -- Last chance to read player data
 end)
 ```
 
-### sessionDestroyed
+### playerDisconnected
 
-Fired after a session has been fully removed.
+Fired after a player connection has been fully removed.
 
 ```lua
-AddEventHandler('meta_core:server:sessionDestroyed', function(source)
-    print('Session for', source, 'destroyed')
+AddEventHandler('meta_core:server:playerDisconnected', function(source, identifier)
+    print('Player', source, 'disconnected')
 end)
 ```
 
 ## Character Events
 
-### characterCreated
+### charCreated
 
-Fired when a new character is created via `CreateCharacter`.
+Fired when a new character is created via `PlayerCharCreate`.
 
 ```lua
-AddEventHandler('meta_core:server:characterCreated', function(source, character)
+AddEventHandler('meta_core:server:charCreated', function(source, character)
     print(character.fullname, 'created in slot', character.slot)
 end)
 ```
 
-### characterDeleted
+### charDeleted
 
-Fired when a character is deleted via `DeleteCharacter`.
+Fired when a character is deleted via `PlayerCharDelete`.
 
 ```lua
-AddEventHandler('meta_core:server:characterDeleted', function(source, charId)
+AddEventHandler('meta_core:server:charDeleted', function(source, charId)
     print('Character', charId, 'deleted by', source)
 end)
 ```
 
-### characterSelected
+### charSelected
 
-Fired when a character is selected via `SelectCharacter`.
+Fired when a character is selected via `PlayerCharSelect`.
 
 ```lua
-AddEventHandler('meta_core:server:characterSelected', function(source, character)
+AddEventHandler('meta_core:server:charSelected', function(source, character)
     print(source, 'selected', character.fullname)
 end)
 ```
 
-## Identity Events
+### charLoaded
+
+Fired when a character is set as active.
+
+```lua
+AddEventHandler('meta_core:server:charLoaded', function(source, character)
+    print(character.fullname, 'loaded')
+end)
+```
+
+### charUnloaded
+
+Fired when an active character is cleared.
+
+```lua
+AddEventHandler('meta_core:server:charUnloaded', function(source)
+    print('Character unloaded for', source)
+end)
+```
+
+## Job & Gang Events
 
 ### jobUpdated
 
-Fired when a player's job is changed via `UpdateJob`.
+Fired when a player's job is changed via `PlayerSetChar(source, 'job', ...)`.
 
 ```lua
-AddEventHandler('meta_core:server:jobUpdated', function(source, job)
+AddEventHandler('meta_core:server:jobUpdated', function(source, job, oldJob)
     print('Job changed to', job.name, 'grade', job.grade)
 end)
 ```
 
 ### gangUpdated
 
-Fired when a player's gang is changed via `UpdateGang`.
+Fired when a player's gang is changed via `PlayerSetChar(source, 'gang', ...)`.
 
 ```lua
-AddEventHandler('meta_core:server:gangUpdated', function(source, gang)
+AddEventHandler('meta_core:server:gangUpdated', function(source, gang, oldGang)
     print('Gang changed to', gang.name)
 end)
 ```
@@ -124,7 +142,7 @@ end)
 
 ### stateChanged
 
-Fired when a single state value is changed via `SetState`.
+Fired when a single state value is changed via `PlayerSetState`.
 
 ```lua
 AddEventHandler('meta_core:server:stateChanged', function(source, key, value, oldValue)
@@ -134,7 +152,7 @@ end)
 
 ### stateBatchChanged
 
-Fired when multiple state values are changed via `SetMany`.
+Fired when multiple state values are changed via `PlayerSetStates`.
 
 ```lua
 AddEventHandler('meta_core:server:stateBatchChanged', function(source, changes)

@@ -58,9 +58,9 @@ Once all your resources use Meta-native APIs, remove `meta_bridge_qb` from your 
 | QB Pattern | Meta-Native Equivalent |
 |-----------|----------------------|
 | `QBCore.Functions.GetPlayerData()` | `exports.meta_logic:GetPlayerData()` |
-| `QBCore.Functions.GetPlayer(source)` | `exports.meta_core:GetSession(source)` + `GetActiveCharacter(source)` |
+| `QBCore.Functions.GetPlayer(source)` | `exports.meta_core:PlayerGetAcct(source)` + `PlayerGetChar(source)` |
 | `QBCore.Functions.TriggerCallback(name, cb, ...)` | `exports.meta_logic:ServerRequest(name, payload, cb)` |
 | `QBCore.Functions.CreateCallback(name, handler)` | `exports.meta_logic:RegisterRoute(name, handler)` |
 | `QBCore.Functions.Notify(text, type)` | `lib.notify({description = text, type = type})` |
-| `Player.Functions.SetJob(name, grade)` | `exports.meta_core:UpdateJob(source, {name, grade})` |
-| `Player.Functions.GetMeta(key)` | `exports.meta_core:GetState(source, key)` |
+| `Player.Functions.SetJob(name, grade)` | `exports.meta_core:PlayerSetChar(source, 'job', {name, grade})` |
+| `Player.Functions.GetMeta(key)` | `exports.meta_core:PlayerGetState(source, key)` |

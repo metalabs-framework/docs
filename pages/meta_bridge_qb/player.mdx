@@ -67,12 +67,12 @@ print(Player.Functions.GetMoney('cash'))
 | `RemoveMoney(type, amount)` | **Stub** — logs warning, returns false |
 | `SetMoney(type, amount)` | **Stub** — logs warning, returns false |
 | `GetJob()` | Returns current job table |
-| `SetJob(name, grade)` | Calls `exports.meta_core:UpdateJob` |
+| `SetJob(name, grade)` | Calls `exports.meta_core:PlayerSetChar(source, 'job', ...)` |
 | `GetGang()` | Returns current gang table |
-| `SetGang(name, grade)` | Calls `exports.meta_core:UpdateGang` |
-| `GetMeta(key)` | Calls `exports.meta_core:GetState` |
-| `SetMeta(key, value)` | Calls `exports.meta_core:SetState` |
-| `Save()` | Calls `exports.meta_core:SaveCharacter` |
+| `SetGang(name, grade)` | Calls `exports.meta_core:PlayerSetChar(source, 'gang', ...)` |
+| `GetMeta(key)` | Calls `exports.meta_core:PlayerGetState` |
+| `SetMeta(key, value)` | Calls `exports.meta_core:PlayerSetState` |
+| `Save()` | Calls `exports.meta_core:PlayerCharSave` |
 | `GetName()` | Returns firstname + lastname |
 
 ### GetPlayers / GetQBPlayers
