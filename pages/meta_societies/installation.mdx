@@ -1,0 +1,76 @@
+# Installation
+
+## Requirements
+
+- FiveM server with **OneSync** enabled
+- [oxmysql](https://github.com/overextended/oxmysql)
+- [meta_core](/meta_core)
+
+## Database Setup
+
+Run the SQL migrations in the `meta_societies/sql/` directory in order:
+
+| File | Table | Purpose |
+|------|-------|---------|
+| `001_meta_societies.sql` | `meta_societies` | Base organization records |
+| `002_meta_society_roles.sql` | `meta_society_roles` | Role definitions per society |
+| `003_meta_society_members.sql` | `meta_society_members` | Membership records |
+| `004_meta_society_permissions.sql` | `meta_society_permissions` | Role-to-permission assignments |
+| `005_meta_society_accounts.sql` | `meta_society_accounts` | Linked account UUIDs by purpose |
+
+The resource also runs `CREATE TABLE IF NOT EXISTS` on startup via bootstrap, so manual migration is optional for fresh installs.
+
+## Server Config
+
+Add to your `server.cfg`:
+
+```cfg
+ensure oxmysql
+ensure meta_core
+ensure meta_societies
+```
+
+meta_societies must start **after** meta_core.
+
+## Society Types
+
+| Type | Example |
+|------|---------|
+| `business` | Hayes Auto, Vanilla Unicorn |
+| `government` | Department of Justice |
+| `department` | LSPD, EMS, SAFD |
+| `service` | Pillbox Medical, Mechanic Shop |
+| `faction` | Lost MC, Ballas |
+| `society` | Traditional society fund |
+
+## Response Contract
+
+All exports return `(ok, result)` tuples.
+
+**Success:**
+
+```lua
+true, { code = 'OK', data = { ... } }
+```
+
+**Error:**
+
+```lua
+false, { code = 'ERROR_CODE', message = 'Human-readable explanation', context = { ... } }
+```
+
+| Error Code | Meaning |
+|------------|---------|
+| `INVALID_ARGUMENT` | Generic bad input |
+| `INVALID_UUID` | Malformed UUID string |
+| `INVALID_SOCIETY_TYPE` | Unknown society type |
+| `INVALID_ACCOUNT_PURPOSE` | Unknown account purpose |
+| `INVALID_PERMISSION_KEY` | Unknown permission key |
+| `INVALID_ROLE_KEY` | Unknown or empty role key |
+| `MISSING_REQUIRED_FIELD` | Required option not provided |
+| `NOT_FOUND` | Society not found |
+| `ALREADY_EXISTS` | Duplicate membership or link |
+| `MEMBERSHIP_NOT_FOUND` | No active membership |
+| `ROLE_NOT_FOUND` | Role does not exist in society |
+| `UNAUTHORIZED` | Permission denied |
+| `INTERNAL_ERROR` | Unexpected server error |

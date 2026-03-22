@@ -1,0 +1,120 @@
+# Roles & Permissions
+
+Every society uses a role-based permission model. Members hold a role, and roles are granted individual permission keys.
+
+## Default Roles
+
+Every society is created with three roles:
+
+| Role | Priority | Owner Role | Default | Purpose |
+|------|----------|------------|---------|---------|
+| `owner` | 100 | Yes | No | Full organizational control |
+| `manager` | 50 | No | No | Day-to-day operations |
+| `member` | 10 | No | Yes | Basic membership access |
+
+New members receive the `member` role unless a different `roleKey` is specified in `AddMember`.
+
+## Permission Keys
+
+| Permission Key | Description |
+|---------------|-------------|
+| `society.view` | View society information |
+| `society.manage` | Manage society settings |
+| `members.view` | View member roster |
+| `members.manage` | Add/remove members |
+| `roles.view` | View role definitions |
+| `roles.manage` | Create/modify roles |
+| `permissions.view` | View permission assignments |
+| `permissions.manage` | Grant/revoke permissions |
+| `accounts.view` | View linked accounts |
+| `accounts.deposit` | Deposit to society accounts |
+| `accounts.withdraw` | Withdraw from society accounts |
+| `accounts.transfer` | Transfer between society accounts |
+| `billing.issue` | Issue bills on behalf of the society |
+| `billing.view` | View billing history |
+| `payroll.manage` | Manage payroll operations |
+
+## Default Permission Matrix
+
+| Permission | Owner | Manager | Member |
+|------------|-------|---------|--------|
+| `society.view` | Yes | Yes | Yes |
+| `society.manage` | Yes | No | No |
+| `members.view` | Yes | Yes | Yes |
+| `members.manage` | Yes | Yes | No |
+| `roles.view` | Yes | Yes | No |
+| `roles.manage` | Yes | No | No |
+| `permissions.view` | Yes | Yes | No |
+| `permissions.manage` | Yes | No | No |
+| `accounts.view` | Yes | Yes | No |
+| `accounts.deposit` | Yes | Yes | No |
+| `accounts.withdraw` | Yes | Yes | No |
+| `accounts.transfer` | Yes | Yes | No |
+| `billing.issue` | Yes | Yes | No |
+| `billing.view` | Yes | Yes | Yes |
+| `payroll.manage` | Yes | Yes | No |
+
+## HasPermission
+
+Check whether a citizen has a specific permission within a society.
+
+```lua
+local ok, result = exports.meta_societies:HasPermission({
+    societyUuid   = 'abc-def-123...',
+    citizenId     = 'XYZ789',
+    permissionKey = 'accounts.withdraw',
+})
+
+if ok and result.data.allowed then
+    -- citizen can withdraw
+end
+```
+
+The check resolves the citizen's active membership, looks up their role, and checks whether that role has been granted the requested permission key.
+
+**Required:** `societyUuid`, `citizenId`, `permissionKey`
+
+## GetRolePermissions
+
+Get all permissions granted to a role.
+
+```lua
+local ok, result = exports.meta_societies:GetRolePermissions({
+    societyUuid = 'abc-def-123...',
+    roleKey     = 'manager',
+})
+
+for _, perm in ipairs(result.data.permissions) do
+    print(perm.permission_key, perm.allowed)
+end
+```
+
+**Required:** `societyUuid`, `roleKey`
+
+## GrantRolePermission
+
+Grant a permission to a role.
+
+```lua
+local ok, result = exports.meta_societies:GrantRolePermission({
+    societyUuid   = 'abc-def-123...',
+    roleKey       = 'member',
+    permissionKey = 'accounts.deposit',
+})
+```
+
+**Required:** `societyUuid`, `roleKey`, `permissionKey`
+
+## RevokeRolePermission
+
+Revoke a permission from a role.
+
+```lua
+local ok, result = exports.meta_societies:RevokeRolePermission({
+    societyUuid   = 'abc-def-123...',
+    roleKey       = 'manager',
+    permissionKey = 'payroll.manage',
+})
+```
+
+**Required:** `societyUuid`, `roleKey`, `permissionKey`

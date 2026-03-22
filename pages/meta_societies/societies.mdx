@@ -1,0 +1,86 @@
+# Societies
+
+Societies are the top-level organizational entity. Every membership, role, permission, and linked account belongs to a society.
+
+## Society Fields
+
+| Field | Description |
+|-------|-------------|
+| `society_uuid` | Canonical UUID for cross-resource references |
+| `society_key` | Stable logical key (`lspd`, `hayes_auto`, `doj`) |
+| `society_name` | Human-readable display name |
+| `society_type` | One of: `business`, `government`, `department`, `service`, `faction`, `society` |
+| `status` | `active` or `inactive` |
+| `owner_type` | Optional owner classification (`character`, `system`) |
+| `owner_id` | Optional owner identifier |
+| `metadata` | Optional JSON metadata |
+
+## CreateSociety
+
+Create a new organization with default roles and permissions.
+
+```lua
+local ok, result = exports.meta_societies:CreateSociety({
+    societyKey  = 'hayes_auto',
+    societyName = 'Hayes Auto Body',
+    societyType = 'business',
+    ownerType   = 'character',
+    ownerId     = citizenId,
+    metadata    = { location = 'harmony' },
+})
+
+if ok then
+    local society = result.data.society
+    local roles   = result.data.roles
+    print(society.society_uuid, society.society_key)
+end
+```
+
+On creation, three default roles are bootstrapped automatically: `owner`, `manager`, and `member`, each with their default permission set. If an `ownerId` is provided, that citizen is automatically added as a member with the `owner` role.
+
+**Required options:** `societyKey`, `societyName`, `societyType`
+
+**Optional options:** `ownerType`, `ownerId`, `metadata`
+
+## GetSocietyByUuid
+
+Fetch a society by its UUID.
+
+```lua
+local ok, result = exports.meta_societies:GetSocietyByUuid({
+    societyUuid = 'abc-def-123...',
+})
+-- result.data: { society_uuid, society_key, society_name, society_type, status, ... }
+```
+
+## GetSocietyByKey
+
+Fetch a society by its stable logical key.
+
+```lua
+local ok, result = exports.meta_societies:GetSocietyByKey({
+    societyKey = 'lspd',
+})
+```
+
+## GetSocietiesByCharacter
+
+Get all societies a citizen belongs to, including their role in each.
+
+```lua
+local ok, result = exports.meta_societies:GetSocietiesByCharacter({
+    citizenId = citizenId,
+    status    = 'active',
+    limit     = 25,
+    offset    = 0,
+    sortOrder = 'desc',
+})
+
+for _, entry in ipairs(result.data.societies) do
+    print(entry.society_name, entry.role_key, entry.role_name)
+end
+```
+
+**Required:** `citizenId`
+
+**Optional:** `status`, `limit` (default 50, max 200), `offset`, `sortOrder` (`asc`/`desc`)

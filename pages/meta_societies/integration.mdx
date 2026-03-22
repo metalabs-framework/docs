@@ -1,0 +1,73 @@
+# Integration
+
+meta_societies provides the authorization layer that other Meta Framework resources query before performing financial or organizational operations.
+
+## Why meta_societies Does Not Mutate Balances
+
+Balance authority belongs exclusively to `meta_eco`. If meta_societies also mutated balances, there would be two sources of truth for account state. Instead, meta_societies provides the authorization layer ("can this person withdraw?") while `meta_eco` handles the mutation ("subtract $500 from account X").
+
+This ensures a single source of truth for balances, clean audit trails via `meta_transactions`, and no circular dependencies.
+
+## With meta_banking
+
+`meta_banking` calls `CanAccessSocietyAccount` before allowing treasury operations, and `GetPrimarySocietyAccount` to resolve the account UUID for `meta_eco`.
+
+```lua
+-- meta_banking: check access before treasury withdrawal
+local ok, result = exports.meta_societies:CanAccessSocietyAccount({
+    societyUuid    = societyUuid,
+    citizenId      = citizenId,
+    accountPurpose = 'treasury',
+    action         = 'withdraw',
+})
+if not ok or not result.data.allowed then
+    return false, 'Access denied'
+end
+
+-- resolve the account UUID
+local accOk, accResult = exports.meta_societies:GetPrimarySocietyAccount({
+    societyUuid    = societyUuid,
+    accountPurpose = 'treasury',
+})
+local accountUuid = accResult.data.account_uuid
+
+-- proceed with meta_eco withdrawal
+```
+
+## With meta_billing
+
+`meta_billing` checks `billing.issue` permission before allowing a citizen to create bills on behalf of a society. It also retrieves the creditor account UUID for the bill.
+
+```lua
+-- meta_billing: verify issuer authorization
+local ok, result = exports.meta_societies:HasPermission({
+    societyUuid   = societyUuid,
+    citizenId     = issuerId,
+    permissionKey = 'billing.issue',
+})
+if not ok or not result.data.allowed then
+    return false, 'Not authorized to issue bills for this society'
+end
+
+-- get creditor account
+local accOk, accResult = exports.meta_societies:GetPrimarySocietyAccount({
+    societyUuid    = societyUuid,
+    accountPurpose = 'treasury',
+})
+
+-- create bill with the society's treasury account as creditor
+```
+
+## With meta_eco
+
+meta_societies stores linked account UUIDs but never calls into `meta_eco`. The dependency flows the other direction: resources that need to perform balance operations first check authorization via meta_societies, then call `meta_eco` with the resolved account UUID.
+
+```
+[meta_banking] --"can they withdraw?"--> [meta_societies]
+[meta_banking] --"get account UUID"----> [meta_societies]
+[meta_banking] --"withdraw $500"-------> [meta_eco]
+```
+
+## With meta_transactions
+
+meta_societies does not own transaction history. Statement queries and reporting belong to `meta_transactions`. Resources use the account UUID from `GetPrimarySocietyAccount` to query transaction history from `meta_transactions`.

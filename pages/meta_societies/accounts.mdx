@@ -1,0 +1,97 @@
+# Linked Accounts
+
+Societies can link external account UUIDs from `meta_eco` by purpose. meta_societies stores only the reference — it never queries or mutates balances.
+
+## Account Purposes
+
+| Purpose | Description |
+|---------|-------------|
+| `treasury` | Main operating account |
+| `operations` | Day-to-day operational expenses |
+| `payroll` | Employee compensation |
+| `savings` | Reserve funds |
+
+Multiple accounts can be linked per purpose. One account per purpose can be marked as primary.
+
+## LinkSocietyAccount
+
+Link an external account UUID to a society for a specific purpose.
+
+```lua
+local ok, result = exports.meta_societies:LinkSocietyAccount({
+    societyUuid    = 'abc-def-123...',
+    accountUuid    = 'eco-account-uuid...',
+    accountPurpose = 'treasury',
+    isPrimary      = true,
+})
+```
+
+If `isPrimary` is true and another account is already primary for that purpose, the previous primary is demoted.
+
+**Required:** `societyUuid`, `accountUuid`, `accountPurpose`
+
+**Optional:** `isPrimary`, `performedByType`, `performedById`, `metadata`
+
+## GetSocietyAccounts
+
+Get all linked accounts for a society.
+
+```lua
+local ok, result = exports.meta_societies:GetSocietyAccounts({
+    societyUuid = 'abc-def-123...',
+})
+
+for _, acct in ipairs(result.data.accounts) do
+    print(acct.account_uuid, acct.account_purpose, acct.is_primary)
+end
+```
+
+**Required:** `societyUuid`
+
+## GetPrimarySocietyAccount
+
+Get the primary account for a specific purpose. Falls back to the first linked account if none is marked primary.
+
+```lua
+local ok, result = exports.meta_societies:GetPrimarySocietyAccount({
+    societyUuid    = 'abc-def-123...',
+    accountPurpose = 'treasury',
+})
+
+if ok then
+    local accountUuid = result.data.account_uuid
+    -- use accountUuid with meta_eco for balance operations
+end
+```
+
+**Required:** `societyUuid`, `accountPurpose`
+
+## CanAccessSocietyAccount
+
+Check whether a citizen can perform a specific action on a society's accounts for a given purpose. This is the primary export that downstream resources like `meta_banking` use before allowing treasury operations.
+
+```lua
+local ok, result = exports.meta_societies:CanAccessSocietyAccount({
+    societyUuid    = 'abc-def-123...',
+    citizenId      = 'XYZ789',
+    accountPurpose = 'treasury',
+    action         = 'withdraw',
+})
+
+if ok and result.data.allowed then
+    -- proceed with withdrawal via meta_eco
+end
+```
+
+Supported actions:
+
+| Action | Maps to Permission |
+|--------|-------------------|
+| `view` | `accounts.view` |
+| `deposit` | `accounts.deposit` |
+| `withdraw` | `accounts.withdraw` |
+| `transfer` | `accounts.transfer` |
+
+The check verifies the society exists and is active, resolves the citizen's membership and role, then checks the mapped permission key.
+
+**Required:** `societyUuid`, `citizenId`, `accountPurpose`, `action`

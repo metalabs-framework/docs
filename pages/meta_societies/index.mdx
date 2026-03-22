@@ -1,0 +1,72 @@
+# meta_societies
+
+Organization, membership, roles, and treasury access authority for the Meta Framework.
+
+## What is meta_societies?
+
+meta_societies is a **server-only** resource that owns organizational identity across the framework. It is the single authority for who belongs to an organization, what role they hold, what permissions they have, and which treasury accounts they can access.
+
+Although named `meta_societies`, the domain model is general. It handles businesses, government agencies, departments, factions, services, and traditional society funds through a unified role-permission system.
+
+## What it is not
+
+- **Not an economy service.** Balance mutations belong to `meta_eco`.
+- **Not a billing service.** Invoice lifecycle belongs to `meta_billing`.
+- **Not a transaction ledger.** History and reporting belong to `meta_transactions`.
+- **Not a banking UI.** Client-facing workflows belong to `meta_banking`.
+
+meta_societies answers one question: "Who belongs to this organization, and what are they allowed to do?"
+
+## API
+
+All operations go through server exports:
+
+```lua
+-- Create an organization
+exports.meta_societies:CreateSociety({
+    societyKey  = 'hayes_auto',
+    societyName = 'Hayes Auto Body',
+    societyType = 'business',
+    ownerId     = citizenId,
+})
+
+-- Membership
+exports.meta_societies:AddMember({ societyUuid = uuid, citizenId = cid })
+exports.meta_societies:SetMemberRole({ societyUuid = uuid, citizenId = cid, roleKey = 'manager' })
+
+-- Permissions
+exports.meta_societies:HasPermission({ societyUuid = uuid, citizenId = cid, permissionKey = 'accounts.withdraw' })
+
+-- Treasury access
+exports.meta_societies:CanAccessSocietyAccount({ societyUuid = uuid, citizenId = cid, accountPurpose = 'treasury', action = 'withdraw' })
+exports.meta_societies:GetPrimarySocietyAccount({ societyUuid = uuid, accountPurpose = 'treasury' })
+```
+
+## Modules
+
+| Module | Responsibility |
+|--------|---------------|
+| **Societies** | Organization CRUD, type classification, status management |
+| **Members** | Membership lifecycle, role assignment, roster queries |
+| **Roles & Permissions** | Role definitions, permission grants/revokes, access checks |
+| **Linked Accounts** | Treasury account mapping by purpose, primary account resolution |
+| **Authorization** | Centralized permission gate for all access decisions |
+| **Validation** | Input sanitization and defensive checks on all exports |
+
+## Architecture
+
+meta_societies sits between `meta_core` (identity) and downstream financial resources. It provides the authorization layer that other resources query before performing actions.
+
+```
+meta_core (identity/session)
+    |
+    v
+meta_societies (org identity, membership, roles, permissions, account linkage)
+    |
+    +---> meta_eco         (balance mutations via linked account UUIDs)
+    +---> meta_billing     (issuer authorization checks)
+    +---> meta_banking     (treasury access checks)
+    +---> meta_transactions (statement queries by account UUID)
+```
+
+meta_societies never calls into downstream resources. The dependency always flows inward.

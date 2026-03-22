@@ -1,0 +1,107 @@
+# Members
+
+Members are the link between a citizen and a society. Each member holds exactly one role within a society at any given time.
+
+## Member Fields
+
+| Field | Description |
+|-------|-------------|
+| `membership_uuid` | Unique membership identifier |
+| `society_uuid` | Society this membership belongs to |
+| `citizen_id` | Character identifier from meta_core |
+| `role_uuid` | Currently assigned role |
+| `status` | `active`, `inactive`, or `removed` |
+| `joined_at` | Timestamp of membership creation |
+| `left_at` | Timestamp of removal (null if active) |
+
+## GetSocietyMembers
+
+List members of a society with their role information.
+
+```lua
+local ok, result = exports.meta_societies:GetSocietyMembers({
+    societyUuid = 'abc-def-123...',
+    status      = 'active',
+    limit       = 50,
+    offset      = 0,
+    sortOrder   = 'desc',
+})
+
+for _, member in ipairs(result.data.members) do
+    print(member.citizen_id, member.role_key, member.role_name, member.status)
+end
+```
+
+**Required:** `societyUuid`
+
+**Optional:** `status`, `limit`, `offset`, `sortOrder`
+
+## AddMember
+
+Add a citizen to a society. If no `roleKey` is specified, the society's default role (`member`) is assigned.
+
+```lua
+local ok, result = exports.meta_societies:AddMember({
+    societyUuid = 'abc-def-123...',
+    citizenId   = 'XYZ789',
+    roleKey     = 'member',
+})
+
+if ok then
+    print(result.data.membership_uuid, result.data.role_key)
+end
+```
+
+If the citizen was previously removed, they are reactivated with the specified role rather than creating a duplicate record.
+
+**Required:** `societyUuid`, `citizenId`
+
+**Optional:** `roleKey`, `performedByType`, `performedById`, `metadata`
+
+## RemoveMember
+
+Remove a citizen from a society. Sets status to `removed` and records `left_at`. Does not hard-delete.
+
+```lua
+local ok, result = exports.meta_societies:RemoveMember({
+    societyUuid = 'abc-def-123...',
+    citizenId   = 'XYZ789',
+})
+```
+
+**Required:** `societyUuid`, `citizenId`
+
+## SetMemberRole
+
+Change a member's role within a society.
+
+```lua
+local ok, result = exports.meta_societies:SetMemberRole({
+    societyUuid = 'abc-def-123...',
+    citizenId   = 'XYZ789',
+    roleKey     = 'manager',
+})
+
+if ok then
+    print('New role:', result.data.role_key, result.data.role_name)
+end
+```
+
+**Required:** `societyUuid`, `citizenId`, `roleKey`
+
+## GetMemberRole
+
+Get a member's current role in a society.
+
+```lua
+local ok, result = exports.meta_societies:GetMemberRole({
+    societyUuid = 'abc-def-123...',
+    citizenId   = 'XYZ789',
+})
+
+if ok then
+    print(result.data.role_key, result.data.role_name, result.data.priority)
+end
+```
+
+**Required:** `societyUuid`, `citizenId`
